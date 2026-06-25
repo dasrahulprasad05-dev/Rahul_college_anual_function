@@ -197,6 +197,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      book_ticket: {
+        Args: { _item_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          issued_at: string
+          item_id: string
+          price_cents: number
+          qr_token: string
+          status: Database["public"]["Enums"]["ticket_status"]
+          used_at: string | null
+          used_by: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
