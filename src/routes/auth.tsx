@@ -1,0 +1,126 @@
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { Link } from "@tanstack/react-router";
+
+const searchSchema = z.object({ redirect: z.string().optional() });
+
+export const Route = createFileRoute("/auth")({
+  validateSearch: searchSchema,
+  head: () => ({ meta: [{ title: "Sign in — Festa" }] }),
+  component: AuthPage,
+});
+
+function AuthPage() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { redirect } = useSearch({ from: "/auth" });
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!loading && user) navigate({ to: redirect ?? "/tickets" });
+  }, [user, loading, navigate, redirect]);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email, password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: name },
+          },
+        });
+        if (error) throw error;
+        toast.success("Account created!");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast.success("Welcome back!");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function google() {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin,
+    });
+    if (result.error) toast.error(result.error.message ?? "Google sign-in failed");
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
+          <div className="w-10 h-10 rounded-lg gradient-gold flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <span className="font-display text-2xl font-bold">Festa</span>
+        </Link>
+
+        <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-6">
+          <h1 className="text-2xl font-bold">{mode === "signin" ? "Welcome back" : "Create account"}</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {mode === "signin" ? "Sign in to book and view your tickets." : "Sign up to start booking tickets."}
+          </p>
+
+          <Button onClick={google} variant="outline" className="w-full mt-6">
+            <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1H12v3.2h5.35c-.23 1.47-1.7 4.3-5.35 4.3-3.22 0-5.85-2.66-5.85-5.95s2.63-5.95 5.85-5.95c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.85 3.97 14.65 3 12 3 6.97 3 3 6.97 3 12s3.97 9 9 9c5.2 0 8.65-3.66 8.65-8.8 0-.6-.07-1.04-.3-1.1z"/></svg>
+            Continue with Google
+          </Button>
+
+          <div className="flex items-center gap-3 my-5">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-muted-foreground">OR</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+
+          <form onSubmit={submit} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <Label htmlFor="name">Full name</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="mt-1.5" />
+              </div>
+            )}
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1.5" />
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1.5" />
+            </div>
+            <Button type="submit" disabled={busy} className="w-full gradient-gold text-primary-foreground hover:opacity-90">
+              {busy ? "..." : mode === "signin" ? "Sign in" : "Create account"}
+            </Button>
+          </form>
+
+          <p className="text-sm text-center text-muted-foreground mt-5">
+            {mode === "signin" ? "New here?" : "Already have an account?"}{" "}
+            <button onClick={() => setMode(mode === "signin" ? "signup" : "signin")} className="text-primary hover:underline">
+              {mode === "signin" ? "Create an account" : "Sign in"}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
