@@ -57,19 +57,11 @@ function EventDetail() {
   const book = useMutation({
     mutationFn: async (item: { id: string; price_cents: number }) => {
       if (!user) throw new Error("Please sign in");
-      const { data, error } = await supabase
-        .from("tickets")
-        .insert({
-          item_id: item.id,
-          user_id: user.id,
-          price_cents: item.price_cents,
-          status: item.price_cents === 0 ? "paid" : "reserved",
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc("book_ticket" as never, { _item_id: item.id } as never);
       if (error) throw error;
       return data;
     },
+
     onSuccess: () => {
       toast.success("Ticket booked! Check 'My Tickets'.");
       qc.invalidateQueries({ queryKey: ["my-tickets-for-event", eventId] });
