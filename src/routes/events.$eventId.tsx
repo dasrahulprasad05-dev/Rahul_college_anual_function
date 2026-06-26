@@ -39,6 +39,17 @@ function EventDetail() {
     },
   });
 
+  const { data: availability } = useQuery({
+    queryKey: ["availability", eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_event_availability" as never, { _event_id: eventId } as never);
+      if (error) throw error;
+      return (data ?? []) as Array<{ item_id: string; capacity: number | null; booked: number; available: number | null }>;
+    },
+    refetchInterval: 15000,
+  });
+  const availMap = new Map((availability ?? []).map((a) => [a.item_id, a]));
+
   const { data: myTickets } = useQuery({
     queryKey: ["my-tickets-for-event", eventId, user?.id],
     enabled: !!user,
@@ -66,6 +77,7 @@ function EventDetail() {
       toast.success("Ticket booked! Check 'My Tickets'.");
       qc.invalidateQueries({ queryKey: ["my-tickets-for-event", eventId] });
       qc.invalidateQueries({ queryKey: ["tickets"] });
+      qc.invalidateQueries({ queryKey: ["availability", eventId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -100,6 +112,8 @@ function EventDetail() {
           <div className="space-y-3">
             {items.map((item) => {
               const isBooked = bookedItemIds.has(item.id);
+              const avail = availMap.get(item.id);
+              const soldOut = avail?.available === 0;
               return (
                 <div key={item.id} className="rounded-xl border border-border/60 bg-card/60 p-5 flex flex-col md:flex-row md:items-center gap-4">
                   <div className="flex-1">
@@ -112,6 +126,27 @@ function EventDetail() {
                       {item.starts_at && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(item.starts_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</span>}
                       {item.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{item.venue}</span>}
                     </div>
+                    {avail && (
+                      <div className="mt-2 text-xs">
+                        {avail.capacity === null ? (
+                          <span className="text-muted-foreground">{avail.booked} booked · unlimited seats</span>
+                        ) : soldOut ? (
+                          <span className="text-destructive font-medium">Sold out</span>
+                        ) : (
+                          <span className={(avail.available ?? 0) <= 10 ? "text-primary font-medium" : "text-muted-foreground"}>
+                            {avail.available} of {avail.capacity} seats left
+                          </span>
+                        )}
+                        {avail.capacity !== null && (
+                          <div className="mt-1 h-1.5 w-40 rounded-full bg-muted overflow-hidden">
+                            <div
+                              className="h-full gradient-gold"
+                              style={{ width: `${Math.min(100, (avail.booked / Math.max(avail.capacity, 1)) * 100)}%` }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-3 md:flex-col md:items-end">
                     <div className="text-right">
@@ -121,6 +156,8 @@ function EventDetail() {
                     </div>
                     {isBooked ? (
                       <Button variant="outline" disabled><Ticket className="w-4 h-4 mr-1.5" />Booked</Button>
+                    ) : soldOut ? (
+                      <Button variant="outline" disabled>Sold out</Button>
                     ) : (
                       <Button
                         onClick={() => user ? book.mutate(item) : navigate({ to: "/auth", search: { redirect: `/events/${eventId}` } })}

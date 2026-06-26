@@ -218,6 +218,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_event_availability: {
+        Args: { _event_id: string }
+        Returns: {
+          available: number
+          booked: number
+          capacity: number
+          item_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
