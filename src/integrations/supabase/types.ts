@@ -52,6 +52,7 @@ export type Database = {
       }
       items: {
         Row: {
+          booked_count: number
           capacity: number | null
           category: string | null
           created_at: string
@@ -65,6 +66,7 @@ export type Database = {
           venue: string | null
         }
         Insert: {
+          booked_count?: number
           capacity?: number | null
           category?: string | null
           created_at?: string
@@ -78,6 +80,7 @@ export type Database = {
           venue?: string | null
         }
         Update: {
+          booked_count?: number
           capacity?: number | null
           category?: string | null
           created_at?: string
@@ -218,6 +221,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      check_in_ticket: { Args: { _qr_token: string }; Returns: Json }
       get_event_availability: {
         Args: { _event_id: string }
         Returns: {
