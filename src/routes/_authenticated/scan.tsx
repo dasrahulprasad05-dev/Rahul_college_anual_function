@@ -28,45 +28,19 @@ function ScanPage() {
     if (token === lastTokenRef.current) return;
     lastTokenRef.current = token;
 
-    const { data: ticket, error: tErr } = await supabase
-      .from("tickets")
-      .select("id, status, used_at, items(name, events(name)), user_id")
-      .eq("qr_token", token)
-      .maybeSingle();
-
-    if (tErr || !ticket) {
-      setResult({ kind: "invalid", message: "Unknown QR code" });
+    const { data, error: rpcErr } = await supabase.rpc("check_in_ticket" as never, { _qr_token: token } as never);
+    if (rpcErr) {
+      setResult({ kind: "invalid", message: rpcErr.message });
       return;
     }
-    if (ticket.status === "used") {
-      setResult({ kind: "already", usedAt: ticket.used_at ?? "" });
-      return;
+    const r = data as { kind: "success" | "already" | "invalid"; message?: string; item?: string; event?: string; used_at?: string };
+    if (r.kind === "success") {
+      setResult({ kind: "success", ticket: { item: r.item ?? "—", event: r.event ?? "—", user_email: "" } });
+    } else if (r.kind === "already") {
+      setResult({ kind: "already", usedAt: r.used_at ?? "" });
+    } else {
+      setResult({ kind: "invalid", message: r.message ?? "Invalid ticket" });
     }
-    if (ticket.status === "cancelled") {
-      setResult({ kind: "invalid", message: "Ticket cancelled" });
-      return;
-    }
-
-    const { error: updErr } = await supabase
-      .from("tickets")
-      .update({ status: "used", used_at: new Date().toISOString() })
-      .eq("id", ticket.id);
-
-    if (updErr) {
-      setResult({ kind: "invalid", message: updErr.message });
-      return;
-    }
-
-    const item = Array.isArray(ticket.items) ? ticket.items[0] : ticket.items;
-    const event = item && (Array.isArray(item.events) ? item.events[0] : item.events);
-    setResult({
-      kind: "success",
-      ticket: {
-        item: item?.name ?? "—",
-        event: event?.name ?? "—",
-        user_email: "",
-      },
-    });
   }
 
   async function start() {
