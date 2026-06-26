@@ -39,6 +39,17 @@ function EventDetail() {
     },
   });
 
+  const { data: availability } = useQuery({
+    queryKey: ["availability", eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_event_availability" as never, { _event_id: eventId } as never);
+      if (error) throw error;
+      return (data ?? []) as Array<{ item_id: string; capacity: number | null; booked: number; available: number | null }>;
+    },
+    refetchInterval: 15000,
+  });
+  const availMap = new Map((availability ?? []).map((a) => [a.item_id, a]));
+
   const { data: myTickets } = useQuery({
     queryKey: ["my-tickets-for-event", eventId, user?.id],
     enabled: !!user,
