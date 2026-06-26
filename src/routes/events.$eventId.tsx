@@ -77,6 +77,7 @@ function EventDetail() {
       toast.success("Ticket booked! Check 'My Tickets'.");
       qc.invalidateQueries({ queryKey: ["my-tickets-for-event", eventId] });
       qc.invalidateQueries({ queryKey: ["tickets"] });
+      qc.invalidateQueries({ queryKey: ["availability", eventId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
