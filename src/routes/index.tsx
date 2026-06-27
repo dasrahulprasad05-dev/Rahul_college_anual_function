@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
-import { Calendar, MapPin, Sparkles, Ticket, ScanLine } from "lucide-react";
+import { Calendar, MapPin, Ticket, ScanLine, Sparkles, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
@@ -14,6 +15,8 @@ export const Route = createFileRoute("/")({
   }),
   component: Index,
 });
+
+const marqueeWords = ["DANCE", "DRAMA", "MUSIC", "AWARDS", "FASHION", "BATTLES", "AFTERPARTY"];
 
 function Index() {
   const { data: events, isLoading } = useQuery({
@@ -30,58 +33,146 @@ function Index() {
   });
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       <Navbar />
 
-      {/* Hero */}
-      <section className="max-w-6xl mx-auto px-4 pt-16 pb-12">
-        <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 text-sm mb-6">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
-            <span className="text-muted-foreground">Annual Function 2026</span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-            A night to <span className="text-gradient-gold">remember</span>
+      {/* HERO */}
+      <section className="relative">
+        <div className="absolute inset-0 grid-bg opacity-40 [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+        {/* Floating neon blobs */}
+        <motion.div
+          aria-hidden
+          className="absolute -top-24 -left-24 w-96 h-96 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(255,46,147,0.55), transparent 65%)" }}
+          animate={{ x: [0, 40, 0], y: [0, 30, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          aria-hidden
+          className="absolute top-40 -right-24 w-[28rem] h-[28rem] rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(33,212,253,0.45), transparent 65%)" }}
+          animate={{ x: [0, -50, 0], y: [0, 40, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        <div className="relative max-w-6xl mx-auto px-4 pt-16 pb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/40 bg-primary/10 text-sm mb-8"
+          >
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse-glow" />
+            <span className="text-foreground/80 tracking-wide">LIVE · ANNUAL FUNCTION 2026</span>
+          </motion.div>
+
+          <h1 className="font-display text-[14vw] md:text-[8.5rem] leading-[0.85] tracking-tighter uppercase">
+            {"FESTA".split("").map((c, i) => (
+              <motion.span
+                key={i}
+                initial={{ y: 80, opacity: 0, rotateX: -60 }}
+                animate={{ y: 0, opacity: 1, rotateX: 0 }}
+                transition={{ delay: 0.05 * i, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                className="inline-block"
+              >
+                <span className={i % 2 === 0 ? "text-foreground" : "text-gradient-neon"}>{c}</span>
+              </motion.span>
+            ))}
           </h1>
-          <p className="mt-6 text-lg text-muted-foreground">
-            Book QR-coded tickets for every performance, competition, and ceremony. Walk in. Get scanned. Enjoy.
-          </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <Button size="lg" className="gradient-gold text-primary-foreground hover:opacity-90" asChild>
-              <a href="#events"><Ticket className="w-4 h-4 mr-2" />Browse events</a>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <Link to="/tickets">My tickets</Link>
-            </Button>
+
+          <div className="mt-4 flex flex-wrap items-end justify-between gap-6">
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="max-w-md text-base md:text-lg text-muted-foreground"
+            >
+              Three nights. One stage. QR tickets for every show — book it, scan it, scream it.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.65, duration: 0.6 }}
+              className="flex gap-3"
+            >
+              <Button size="lg" className="gradient-gold text-primary-foreground hover:opacity-90 group" asChild>
+                <a href="#events"><Ticket className="w-4 h-4 mr-2" />Browse events<ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" /></a>
+              </Button>
+              <Button size="lg" variant="outline" className="border-accent/50 hover:border-accent" asChild>
+                <Link to="/tickets">My tickets</Link>
+              </Button>
+            </motion.div>
           </div>
         </div>
 
-        {/* Feature strip */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-16">
+        {/* Marquee */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.9, duration: 0.8 }}
+          className="relative border-y border-border/50 bg-background/40 backdrop-blur py-5 overflow-hidden"
+        >
+          <div className="flex whitespace-nowrap animate-marquee w-max">
+            {[...marqueeWords, ...marqueeWords, ...marqueeWords].map((w, i) => (
+              <span key={i} className="font-display text-3xl md:text-5xl uppercase mx-8 flex items-center gap-8">
+                <span className={i % 3 === 0 ? "text-gradient-neon" : i % 3 === 1 ? "text-foreground" : "text-accent"}>{w}</span>
+                <Sparkles className="w-6 h-6 text-primary shrink-0" />
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* FEATURE STRIP */}
+      <section className="max-w-6xl mx-auto px-4 py-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: Ticket, title: "QR Tickets", desc: "Every ticket carries a unique QR code, instantly delivered to your account." },
-            { icon: ScanLine, title: "Scan & enter", desc: "Volunteers scan at the gate — no paper, no lines, no fakes." },
-            { icon: Sparkles, title: "Item-level access", desc: "Pick exactly the items you want — dance night, drama, awards, all separate." },
-          ].map((f) => (
-            <div key={f.title} className="rounded-2xl border border-border/60 bg-card/40 backdrop-blur p-6">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-                <f.icon className="w-5 h-5 text-primary" />
+            { icon: Ticket, title: "QR Tickets", desc: "Unique QR per ticket. Delivered instantly to your account.", color: "var(--neon-pink)" },
+            { icon: ScanLine, title: "Scan & enter", desc: "Volunteers scan at the gate — no paper, no lines, no fakes.", color: "var(--neon-cyan)" },
+            { icon: Zap, title: "Item-level access", desc: "Pick exactly the shows you want — every item booked separately.", color: "var(--neon-yellow)" },
+          ].map((f, i) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: i * 0.1, duration: 0.6 }}
+              whileHover={{ y: -4 }}
+              className="group relative rounded-2xl border border-border/60 bg-card/40 backdrop-blur p-6 overflow-hidden"
+            >
+              <div
+                aria-hidden
+                className="absolute -top-16 -right-16 w-40 h-40 rounded-full blur-2xl opacity-0 group-hover:opacity-60 transition-opacity duration-500"
+                style={{ background: `radial-gradient(circle, ${f.color}, transparent 70%)` }}
+              />
+              <div
+                className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style={{ background: `color-mix(in oklab, ${f.color} 18%, transparent)`, color: f.color }}
+              >
+                <f.icon className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg">{f.title}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{f.desc}</p>
-            </div>
+              <h3 className="font-display text-lg uppercase tracking-tight">{f.title}</h3>
+              <p className="text-sm text-muted-foreground mt-2">{f.desc}</p>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* Events */}
+      {/* EVENTS */}
       <section id="events" className="max-w-6xl mx-auto px-4 py-16">
-        <div className="flex items-end justify-between mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="flex items-end justify-between mb-10"
+        >
           <div>
-            <h2 className="text-3xl font-bold">Upcoming events</h2>
-            <p className="text-muted-foreground mt-1">Tap an event to see all its items and book tickets.</p>
+            <span className="text-xs tracking-[0.3em] text-accent uppercase">— Line-up</span>
+            <h2 className="font-display text-5xl md:text-6xl mt-2 uppercase">Upcoming <span className="text-gradient-neon">events</span></h2>
           </div>
-        </div>
+        </motion.div>
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -95,27 +186,39 @@ function Index() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {events.map((e) => (
-              <Link
+            {events.map((e, i) => (
+              <motion.div
                 key={e.id}
-                to="/events/$eventId"
-                params={{ eventId: e.id }}
-                className="group rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-6 hover:border-primary/50 hover:bg-card transition"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ delay: i * 0.08, duration: 0.55 }}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-2xl font-bold group-hover:text-primary transition">{e.name}</h3>
-                    {e.description && <p className="text-muted-foreground mt-2 line-clamp-2">{e.description}</p>}
+                <Link
+                  to="/events/$eventId"
+                  params={{ eventId: e.id }}
+                  className="group relative block rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-6 hover:border-primary/60 transition overflow-hidden"
+                >
+                  <div
+                    aria-hidden
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background: "radial-gradient(600px circle at var(--mx,50%) var(--my,50%), rgba(255,46,147,0.12), transparent 40%)" }}
+                  />
+                  <div className="relative flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-display text-2xl md:text-3xl uppercase group-hover:text-gradient-neon transition">{e.name}</h3>
+                      {e.description && <p className="text-muted-foreground mt-2 line-clamp-2 max-w-md">{e.description}</p>}
+                    </div>
+                    <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform">
+                      <ArrowRight className="w-5 h-5 text-primary-foreground" />
+                    </div>
                   </div>
-                  <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shrink-0">
-                    <Sparkles className="w-6 h-6 text-primary-foreground" />
+                  <div className="relative flex items-center gap-4 mt-5 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-accent" />{new Date(e.event_date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
+                    {e.venue && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" />{e.venue}</span>}
                   </div>
-                </div>
-                <div className="flex items-center gap-4 mt-5 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{new Date(e.event_date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
-                  {e.venue && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{e.venue}</span>}
-                </div>
-              </Link>
+                </Link>
+              </motion.div>
             ))}
           </div>
         )}
