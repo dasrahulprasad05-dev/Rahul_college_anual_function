@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Calendar, MapPin, Ticket, ScanLine, Sparkles, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { eventColors } from "@/lib/event-color";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -97,7 +98,7 @@ function Index() {
               className="flex gap-3"
             >
               <Button size="lg" className="gradient-gold text-primary-foreground hover:opacity-90 group" asChild>
-                <a href="#events"><Ticket className="w-4 h-4 mr-2" />Browse events<ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" /></a>
+                <Link to="/events"><Ticket className="w-4 h-4 mr-2" />Browse events<ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="border-accent/50 hover:border-accent" asChild>
                 <Link to="/tickets">My tickets</Link>
@@ -186,40 +187,60 @@ function Index() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {events.map((e, i) => (
-              <motion.div
-                key={e.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ delay: i * 0.08, duration: 0.55 }}
-              >
-                <Link
-                  to="/events/$eventId"
-                  params={{ eventId: e.id }}
-                  className="group relative block rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-6 hover:border-primary/60 transition overflow-hidden"
+            {events.map((e, i) => {
+              const c = eventColors(e.id);
+              return (
+                <motion.div
+                  key={e.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  transition={{ delay: i * 0.08, duration: 0.55 }}
                 >
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: "radial-gradient(600px circle at var(--mx,50%) var(--my,50%), rgba(255,46,147,0.12), transparent 40%)" }}
-                  />
-                  <div className="relative flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="font-display text-2xl md:text-3xl uppercase group-hover:text-gradient-neon transition">{e.name}</h3>
-                      {e.description && <p className="text-muted-foreground mt-2 line-clamp-2 max-w-md">{e.description}</p>}
+                  <Link
+                    to="/events/$eventId"
+                    params={{ eventId: e.id }}
+                    className="group relative block rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-6 overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-transparent hover:shadow-2xl"
+                  >
+                    <div
+                      aria-hidden
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                      style={{ background: c.gradient, mixBlendMode: "overlay" }}
+                    />
+                    <div
+                      aria-hidden
+                      className="absolute -top-20 -right-20 w-56 h-56 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition duration-500"
+                      style={{ background: `radial-gradient(circle, ${c.primary}, transparent 70%)` }}
+                    />
+                    <div className="relative flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-display text-2xl md:text-3xl uppercase transition-colors duration-500 group-hover:bg-clip-text group-hover:text-transparent"
+                            style={{ ["--gd" as string]: c.gradient, backgroundImage: "var(--gd)" }}>
+                          {e.name}
+                        </h3>
+                        {e.description && <p className="text-muted-foreground mt-2 line-clamp-2 max-w-md">{e.description}</p>}
+                      </div>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform"
+                           style={{ background: c.gradient, boxShadow: c.glow }}>
+                        <ArrowRight className="w-5 h-5 text-white" />
+                      </div>
                     </div>
-                    <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform">
-                      <ArrowRight className="w-5 h-5 text-primary-foreground" />
+                    <div className="relative flex items-center gap-4 mt-5 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-4 h-4 transition-colors" style={{ color: c.primary }} />
+                        {new Date(e.event_date).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                      </span>
+                      {e.venue && (
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="w-4 h-4" style={{ color: c.secondary }} />
+                          {e.venue}
+                        </span>
+                      )}
                     </div>
-                  </div>
-                  <div className="relative flex items-center gap-4 mt-5 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4 text-accent" />{new Date(e.event_date).toLocaleDateString(undefined, { dateStyle: "medium" })}</span>
-                    {e.venue && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4 text-primary" />{e.venue}</span>}
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </section>
