@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Ticket, ScanLine, Shield, LogOut } from "lucide-react";
+import { Ticket, ScanLine, Shield, LogOut, BarChart3 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 export function Navbar() {
