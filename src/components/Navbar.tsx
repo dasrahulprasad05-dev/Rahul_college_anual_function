@@ -27,9 +27,14 @@ export function Navbar() {
                 </Button>
               )}
               {isAdmin && (
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/admin"><Shield className="w-4 h-4 mr-1.5" />Admin</Link>
-                </Button>
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/dashboard"><BarChart3 className="w-4 h-4 mr-1.5" />Dashboard</Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/admin"><Shield className="w-4 h-4 mr-1.5" />Admin</Link>
+                  </Button>
+                </>
               )}
               <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate({ to: "/" }); }}>
                 <LogOut className="w-4 h-4" />
