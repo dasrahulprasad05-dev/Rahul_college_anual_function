@@ -292,7 +292,7 @@ function ChartHorizontal({ data, dataKey, valueFormatter }: { data: ChartRow[]; 
           <Tooltip content={<DarkTooltip valueFormatter={valueFormatter} />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.2 }} />
           <Bar dataKey={dataKey} radius={[0, 6, 6, 0]}>
             {rows.map((r) => (
-              <Bar key={r.id} dataKey={dataKey} fill={r.color} />
+              <Cell key={r.id} fill={r.color} />
             ))}
           </Bar>
         </BarChart>
