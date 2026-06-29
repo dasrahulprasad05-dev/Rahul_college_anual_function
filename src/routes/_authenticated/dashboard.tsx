@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar, Cell, XAxis, YAxis, Tooltip, CartesianGrid,
   AreaChart, Area, Legend,
 } from "recharts";
 import { format, subDays, startOfDay } from "date-fns";
