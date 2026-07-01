@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
-import { Ticket, ScanLine, Shield, LogOut, BarChart3 } from "lucide-react";
+import { Ticket, ScanLine, Shield, LogOut, BarChart3, Users } from "lucide-react";
 import { Logo } from "@/components/Logo";
 
 export function Navbar() {
@@ -22,9 +22,14 @@ export function Navbar() {
                 <Link to="/tickets"><Ticket className="w-4 h-4 mr-1.5" />My Tickets</Link>
               </Button>
               {isVolunteer && (
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/scan"><ScanLine className="w-4 h-4 mr-1.5" />Scan</Link>
-                </Button>
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/volunteer"><Users className="w-4 h-4 mr-1.5" />Volunteer</Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/scan"><ScanLine className="w-4 h-4 mr-1.5" />Scan</Link>
+                  </Button>
+                </>
               )}
               {isAdmin && (
                 <>
