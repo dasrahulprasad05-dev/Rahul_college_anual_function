@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangle, Calendar, Plus, Ticket, Users, ScanLine, Trash2, Pencil, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { TeamManager } from "@/components/admin/TeamManager";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -210,6 +211,10 @@ VALUES ('${user?.id ?? "YOUR_USER_ID"}', 'admin');`}</pre>
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-10">
+          <TeamManager />
         </div>
       </div>
     </div>
