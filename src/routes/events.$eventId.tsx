@@ -18,6 +18,7 @@ function EventDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const sendConfirmation = useServerFn(sendTicketConfirmation);
 
   const { data: event } = useQuery({
     queryKey: ["event", eventId],
