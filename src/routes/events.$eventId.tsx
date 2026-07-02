@@ -1,11 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin, Clock, Ticket, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { sendTicketConfirmation } from "@/lib/emails.functions";
 
 export const Route = createFileRoute("/events/$eventId")({
   component: EventDetail,
@@ -16,6 +18,7 @@ function EventDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const sendConfirmation = useServerFn(sendTicketConfirmation);
 
   const { data: event } = useQuery({
     queryKey: ["event", eventId],
@@ -70,14 +73,21 @@ function EventDetail() {
       if (!user) throw new Error("Please sign in");
       const { data, error } = await supabase.rpc("book_ticket" as never, { _item_id: item.id } as never);
       if (error) throw error;
-      return data;
+      return data as { id: string } | null;
     },
 
-    onSuccess: () => {
+    onSuccess: (ticket) => {
       toast.success("Ticket booked! Check 'My Tickets'.");
       qc.invalidateQueries({ queryKey: ["my-tickets-for-event", eventId] });
       qc.invalidateQueries({ queryKey: ["tickets"] });
       qc.invalidateQueries({ queryKey: ["availability", eventId] });
+      if (ticket?.id) {
+        sendConfirmation({ data: { ticketId: ticket.id } })
+          .then((r) => {
+            if (r?.ok) toast.success("Confirmation email sent");
+          })
+          .catch((e) => console.warn("Email send failed", e));
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
