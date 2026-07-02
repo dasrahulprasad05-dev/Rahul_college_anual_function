@@ -27,7 +27,8 @@ function Index() {
         .from("events")
         .select("*")
         .eq("is_published", true)
-        .order("event_date", { ascending: true });
+        .order("event_date", { ascending: true })
+        .limit(20);
       if (error) throw error;
       return data;
     },
