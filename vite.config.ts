@@ -13,4 +13,7 @@ export default defineConfig({
     tailwindcss(),
     tsConfigPaths(),
   ],
+  server: {
+    port: 8080,
+  },
 });
