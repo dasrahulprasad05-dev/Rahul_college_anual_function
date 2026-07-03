@@ -61,5 +61,24 @@ service cloud.firestore {
       allow read: if isAdmin() || (isAuthenticated() && resource.data.user_id == request.auth.uid);
       allow write: if isAdmin();
     }
+    
+    // Gate Passes
+    match /gate_passes/{passId} {
+      // Admins can read all. Users can read their own.
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.user_id == request.auth.uid);
+      // Users can apply for a gate pass
+      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      // Admins can approve/reject
+      allow update, delete: if isAdmin();
+    }
+    
+    // Feedback
+    match /feedback/{feedbackId} {
+      // Anyone can read public feedback
+      allow read: if true;
+      // Users can submit feedback if authenticated
+      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
   }
 }

@@ -15,8 +15,12 @@ import { db } from "@/lib/firebase";
 export interface Ticket {
   id: string;
   user_id: string;
+  user_email?: string;
   event_id: string;
+  event_name?: string;
   item_id: string;
+  item_name?: string;
+  venue?: string;
   qr_token: string;
   status: "paid" | "used" | "cancelled";
   price_cents: number;
@@ -40,8 +44,16 @@ export const ticketsService = {
   },
 
   // Atomic transaction to prevent double booking
-  async bookTicket(userId: string, eventId: string, itemId: string) {
-    const itemRef = doc(db, `events/${eventId}/items/${itemId}`);
+  async bookTicket(opts: {
+    userId: string;
+    userEmail?: string;
+    eventId: string;
+    eventName?: string;
+    venue?: string;
+    itemId: string;
+    itemName?: string;
+  }) {
+    const itemRef = doc(db, `events/${opts.eventId}/items/${opts.itemId}`);
     const newTicketRef = doc(collection(db, "tickets"));
     const qrToken = `qr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -59,9 +71,13 @@ export const ticketsService = {
 
       // Create ticket
       const ticketData: Omit<Ticket, "id"> = {
-        user_id: userId,
-        event_id: eventId,
-        item_id: itemId,
+        user_id: opts.userId,
+        user_email: opts.userEmail,
+        event_id: opts.eventId,
+        event_name: opts.eventName || "Event",
+        item_id: opts.itemId,
+        item_name: opts.itemName || itemData.name || "Ticket",
+        venue: opts.venue || "TBA",
         qr_token: qrToken,
         status: "paid",
         price_cents: itemData.price_cents || 0,
@@ -85,6 +101,22 @@ export const ticketsService = {
       used_at: new Date().toISOString(),
       used_by: volunteerId,
     });
+
+    // Send confirmation email asynchronously if email is present
+    if (ticket.user_email) {
+      import("@/services/email/ticket-emails")
+        .then(({ sendScanConfirmation }) => {
+          sendScanConfirmation({
+            data: {
+              recipient: ticket.user_email!,
+              eventName: ticket.event_name || "Event",
+              itemName: ticket.item_name || "Ticket",
+              venue: ticket.venue || "TBA",
+            }
+          });
+        })
+        .catch((e) => console.error("Failed to send scan confirmation:", e));
+    }
 
     return ticket;
   },

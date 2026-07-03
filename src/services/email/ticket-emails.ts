@@ -48,3 +48,19 @@ export const sendTicketConfirmation = createServerFn({ method: "POST" })
     }
     return { ok: true as const, id: res.id };
   });
+
+export const sendScanConfirmation = createServerFn({ method: "POST" })
+  .inputValidator((data: { recipient: string; eventName: string; itemName: string; venue: string }) => data)
+  .handler(async ({ data }) => {
+    // Note: Dynamically import scanConfirmationEmail if it needs access to BRAND which might be client-side only 
+    // or just import it statically if it's safe for server.
+    const { scanConfirmationEmail } = await import("./email-templates");
+    const { subject, html } = scanConfirmationEmail(data.eventName, data.itemName, data.venue);
+    
+    const res = await sendEmail(data.recipient, subject, html);
+    if (!res.ok) {
+      console.error("Resend error", res.error);
+      return { ok: false as const, error: res.error };
+    }
+    return { ok: true as const, id: res.id };
+  });

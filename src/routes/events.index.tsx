@@ -5,6 +5,7 @@ import { eventsService } from "@/services/firestore/events";
 import { Navbar } from "@/components/Navbar";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import { eventColors } from "@/lib/event-color";
+import { HoverColorCard } from "@/components/ui/hover-color-card";
 
 export const Route = createFileRoute("/events/")({
   head: () => ({
@@ -74,47 +75,8 @@ function AllEvents() {
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ delay: (i % 6) * 0.06, duration: 0.5 }}
                 >
-                  <Link
-                    to="/events/$eventId"
-                    params={{ eventId: e.id }}
-                    className="group relative block rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-6 overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-transparent"
-                    style={{ ["--glow" as string]: c.glow }}
-                  >
-                    {/* color-reveal blob */}
-                    <div
-                      aria-hidden
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{ background: c.gradient, mixBlendMode: "overlay" }}
-                    />
-                    <div
-                      aria-hidden
-                      className="absolute -top-16 -right-16 w-44 h-44 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition duration-500"
-                      style={{
-                        background: `radial-gradient(circle, ${c.primary}, transparent 70%)`,
-                      }}
-                    />
-                    <div className="relative flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <h3
-                          className="font-display text-2xl uppercase line-clamp-2 transition-colors duration-500 group-hover:[background:var(--gd)] group-hover:bg-clip-text group-hover:text-transparent"
-                          style={{ ["--gd" as string]: c.gradient }}
-                        >
-                          {e.name}
-                        </h3>
-                        {e.description && (
-                          <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
-                            {e.description}
-                          </p>
-                        )}
-                      </div>
-                      <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-500 group-hover:rotate-12"
-                        style={{ background: c.gradient, boxShadow: c.glow }}
-                      >
-                        <ArrowRight className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                    <div className="relative flex items-center gap-4 mt-5 text-sm text-muted-foreground">
+                  <HoverColorCard key={e.id} eventId={e.id} name={e.name} description={e.description}>
+                    <div className="relative flex items-center gap-4 text-sm text-muted-foreground">
                       {e.event_date && (
                         <span className="flex items-center gap-1.5">
                           <Calendar className="w-4 h-4" style={{ color: c.primary }} />
@@ -130,7 +92,7 @@ function AllEvents() {
                         </span>
                       )}
                     </div>
-                  </Link>
+                  </HoverColorCard>
                 </motion.div>
               );
             })}

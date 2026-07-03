@@ -10,8 +10,18 @@ import {
   getDocs,
   collectionGroup,
 } from "firebase/firestore";
-import { eventsService, AppEvent } from "@/services/firestore/events";
-import { useAuth } from "@/context/AuthContext";
+import { eventsService, type EventItem } from "@/services/firestore/events";
+import { ticketsService } from "@/services/firestore/tickets";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { TeamManager } from "@/components/admin/TeamManager";
+import { GatePassManager } from "@/components/admin/GatePassManager";
+import { seedDatabase } from "@/lib/seed-data";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +49,6 @@ import {
   EyeOff,
 } from "lucide-react";
 import { toast } from "sonner";
-import { TeamManager } from "@/components/admin/TeamManager";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
@@ -216,16 +225,21 @@ VALUES ('${user?.id ?? "YOUR_USER_ID"}', 'admin');`}</pre>
             <h1 className="text-3xl font-bold">Admin</h1>
             <p className="text-muted-foreground">Manage events, items, and check-ins.</p>
           </div>
-          <EventDialog
-            mode="create"
-            onSubmit={(v) => createEvent.mutate(v)}
-            trigger={
-              <Button className="gradient-gold text-primary-foreground hover:opacity-90">
-                <Plus className="w-4 h-4 mr-1.5" />
-                New event
-              </Button>
-            }
-          />
+          <div className="flex items-center gap-3">
+            <Button variant="outline" onClick={() => seedDatabase()} className="text-muted-foreground">
+              Seed DB
+            </Button>
+            <EventDialog
+              mode="create"
+              onSubmit={(v) => createEvent.mutate(v)}
+              trigger={
+                <Button className="gradient-gold text-primary-foreground hover:opacity-90">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  New event
+                </Button>
+              }
+            />
+          </div>
         </div>
 
         {/* Stats */}
@@ -335,6 +349,9 @@ VALUES ('${user?.id ?? "YOUR_USER_ID"}', 'admin');`}</pre>
 
         <div className="mt-10">
           <TeamManager />
+        </div>
+        <div className="mt-16">
+          <GatePassManager />
         </div>
       </div>
     </div>

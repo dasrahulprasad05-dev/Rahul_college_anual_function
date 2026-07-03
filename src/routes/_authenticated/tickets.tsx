@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Calendar, MapPin, CheckCircle2, Clock, Sparkles } from "lucide-react";
 import { eventColors } from "@/lib/event-color";
+import { FeedbackModal } from "@/components/tickets/FeedbackModal";
 
 export const Route = createFileRoute("/_authenticated/tickets")({
   component: TicketsPage,
@@ -182,10 +183,13 @@ function TicketsPage() {
                       </div>
                       <div className="mt-4 text-center">
                         {used ? (
-                          <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Used {t.used_at && new Date(t.used_at).toLocaleString()}
-                          </span>
+                          <div className="flex flex-col gap-2">
+                            <span className="inline-flex items-center justify-center gap-1 text-xs px-2.5 py-1 rounded-full bg-muted text-muted-foreground w-fit mx-auto">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Used {t.used_at && new Date(t.used_at).toLocaleDateString()}
+                            </span>
+                            <FeedbackModal ticketId={t.id} eventId={eventId} />
+                          </div>
                         ) : t.status === "reserved" ? (
                           <span className="text-xs px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-700">
                             Payment pending

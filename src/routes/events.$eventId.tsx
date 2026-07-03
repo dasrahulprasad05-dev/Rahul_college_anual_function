@@ -8,9 +8,10 @@ import { ticketsService } from "@/services/firestore/tickets";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Clock, Ticket, ArrowLeft } from "lucide-react";
+import { Calendar, MapPin, Clock, Ticket, ArrowLeft, Star } from "lucide-react";
 import { toast } from "sonner";
 import { sendTicketConfirmation } from "@/services/email/ticket-emails";
+import { feedbackService } from "@/services/firestore/feedback";
 
 export const Route = createFileRoute("/events/$eventId")({
   component: EventDetail,
@@ -61,7 +62,15 @@ function EventDetail() {
     mutationFn: async (item: { id: string; price_cents: number; event_id?: string }) => {
       if (!user) throw new Error("Please sign in");
 
-      const ticketId = await ticketsService.bookTicket(user.id, eventId, item.id);
+      const ticketId = await ticketsService.bookTicket({
+        userId: user.id,
+        userEmail: user.email,
+        eventId: eventId,
+        eventName: event.name,
+        venue: event.venue,
+        itemId: item.id,
+        itemName: item.name
+      });
       return { id: ticketId };
     },
     onSuccess: (ticket) => {
@@ -80,6 +89,15 @@ function EventDetail() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const { data: feedbackData } = useQuery({
+    queryKey: ["feedback", eventId],
+    queryFn: () => feedbackService.getEventFeedback(eventId),
+  });
+
+  const avgRating = feedbackData?.length
+    ? (feedbackData.reduce((acc, f) => acc + f.rating, 0) / feedbackData.length).toFixed(1)
+    : null;
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -94,7 +112,16 @@ function EventDetail() {
 
         {event && (
           <div className="rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-8 mb-8">
-            <h1 className="text-4xl font-bold text-gradient-gold">{event.name}</h1>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h1 className="text-4xl font-bold text-gradient-gold">{event.name}</h1>
+              {avgRating && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10 border border-accent/20">
+                  <Star className="w-4 h-4 text-accent fill-accent" />
+                  <span className="font-semibold text-accent">{avgRating}</span>
+                  <span className="text-xs text-muted-foreground">({feedbackData?.length} reviews)</span>
+                </div>
+              )}
+            </div>
             {event.description && <p className="mt-3 text-muted-foreground">{event.description}</p>}
             <div className="flex flex-wrap gap-4 mt-5 text-sm text-muted-foreground">
               {event.event_date && (

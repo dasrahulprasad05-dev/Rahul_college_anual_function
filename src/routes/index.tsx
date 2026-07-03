@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { Calendar, MapPin, Ticket, ScanLine, Sparkles, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { eventColors } from "@/lib/event-color";
+import { HoverColorCard } from "@/components/ui/hover-color-card";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -244,44 +245,7 @@ function Index() {
                   viewport={{ once: true, margin: "-40px" }}
                   transition={{ delay: i * 0.08, duration: 0.55 }}
                 >
-                  <Link
-                    to="/events/$eventId"
-                    params={{ eventId: e.id }}
-                    className="group relative block rounded-2xl border border-border/60 bg-card/60 backdrop-blur p-6 overflow-hidden transition-all duration-500 hover:-translate-y-1 hover:border-transparent hover:shadow-2xl"
-                  >
-                    <div
-                      aria-hidden
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                      style={{ background: c.gradient, mixBlendMode: "overlay" }}
-                    />
-                    <div
-                      aria-hidden
-                      className="absolute -top-20 -right-20 w-56 h-56 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition duration-500"
-                      style={{
-                        background: `radial-gradient(circle, ${c.primary}, transparent 70%)`,
-                      }}
-                    />
-                    <div className="relative flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <h3
-                          className="font-display text-2xl md:text-3xl uppercase transition-colors duration-500 group-hover:bg-clip-text group-hover:text-transparent"
-                          style={{ ["--gd" as string]: c.gradient, backgroundImage: "var(--gd)" }}
-                        >
-                          {e.name}
-                        </h3>
-                        {e.description && (
-                          <p className="text-muted-foreground mt-2 line-clamp-2 max-w-md">
-                            {e.description}
-                          </p>
-                        )}
-                      </div>
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform"
-                        style={{ background: c.gradient, boxShadow: c.glow }}
-                      >
-                        <ArrowRight className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
+                <HoverColorCard key={e.id} eventId={e.id} name={e.name} description={e.description}>
                     <div className="relative flex items-center gap-4 mt-5 text-sm text-muted-foreground">
                       {e.event_date && (
                         <span className="flex items-center gap-1.5">
@@ -301,7 +265,7 @@ function Index() {
                         </span>
                       )}
                     </div>
-                  </Link>
+                  </HoverColorCard>
                 </motion.div>
               );
             })}

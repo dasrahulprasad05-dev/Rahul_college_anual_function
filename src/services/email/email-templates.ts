@@ -100,3 +100,23 @@ export function passwordResetEmail(name: string, resetUrl: string) {
     html: shell("Reset your Festa password", inner),
   };
 }
+
+// ── Scan Confirmation (sent when a ticket is checked in) ─────────────────
+export function scanConfirmationEmail(eventName: string, itemName: string, venue: string) {
+  const inner = `
+    <h1 style="margin:0 0 12px;font-size:26px;font-weight:800;color:${BRAND.text}">You're checked in! ✅</h1>
+    <p style="margin:0 0 8px;color:${BRAND.muted};font-size:15px;line-height:1.6">
+      Your ticket for <strong>${itemName}</strong> at <strong>${eventName}</strong> has been successfully scanned.
+    </p>
+    <div style="background:#0B0B12;padding:16px;border-radius:12px;margin:24px 0;border:1px solid rgba(255,255,255,0.1)">
+      <p style="margin:0 0 8px;color:${BRAND.muted};font-size:14px">📍 <strong>Venue:</strong> ${venue}</p>
+      <p style="margin:0;color:${BRAND.muted};font-size:14px">⏰ <strong>Time:</strong> ${new Date().toLocaleString()}</p>
+    </div>
+    <p style="margin:24px 0 0;color:${BRAND.text};font-size:15px;font-weight:600">
+      Enjoy the event! 🎉
+    </p>`;
+  return {
+    subject: `Ticket Checked In: ${itemName} at ${eventName}`,
+    html: shell(`You're checked in to ${itemName}`, inner),
+  };
+}
