@@ -30,6 +30,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const signupVerify = useServerFn(sendSignupVerification);
+  const requestReset = useServerFn(sendPasswordReset);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: redirect ?? "/tickets" });
