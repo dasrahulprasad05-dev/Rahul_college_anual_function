@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { sendSignupVerification, sendPasswordReset } from "@/lib/auth-emails.functions";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -28,6 +30,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const signupVerify = useServerFn(sendSignupVerification);
+  const requestReset = useServerFn(sendPasswordReset);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: redirect ?? "/tickets" });
@@ -38,21 +42,21 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email, password,
-          options: {
-            emailRedirectTo: window.location.origin,
-            data: { full_name: name },
+        await signupVerify({
+          data: {
+            email,
+            password,
+            fullName: name,
+            redirectTo: window.location.origin,
           },
         });
-        if (error) throw error;
-        toast.success("Account created! Check your email to verify.");
+        toast.success("Verification email sent! Check your inbox to confirm.");
+        setMode("signin");
       } else if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+        await requestReset({
+          data: { email, redirectTo: `${window.location.origin}/reset-password` },
         });
-        if (error) throw error;
-        toast.success("Password reset link sent! Check your email.");
+        toast.success("If that email exists, a reset link is on the way.");
         setMode("signin");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });

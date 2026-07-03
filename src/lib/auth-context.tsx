@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { sendWelcomeIfFirstTime } from "@/lib/auth-emails.functions";
 
 type Role = "admin" | "volunteer" | "student";
 
@@ -23,7 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
       if (s?.user) {
@@ -32,6 +33,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           supabase.from("user_roles").select("role").eq("user_id", s.user.id).then(({ data }) => {
             setRoles((data ?? []).map((r) => r.role as Role));
           });
+          // Fire welcome email (idempotent — no-op if already sent)
+          if (event === "SIGNED_IN") {
+            sendWelcomeIfFirstTime().catch((err) => console.warn("welcome email:", err));
+          }
         }, 0);
       } else {
         setRoles([]);
