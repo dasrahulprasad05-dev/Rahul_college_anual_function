@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { sendSignupVerification, sendPasswordReset } from "@/lib/auth-emails.functions";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
