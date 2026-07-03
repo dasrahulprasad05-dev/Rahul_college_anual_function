@@ -1,29 +1,32 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM_ADDRESS = "Festa <onboarding@resend.dev>"; // Update to actual domain later
+// Using Gmail as the SMTP transport
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.VITE_GMAIL_USER, // e.g. 'abit.fest.2026@gmail.com'
+    pass: process.env.VITE_GMAIL_APP_PASSWORD, // 16-character app password
+  },
+});
 
 export async function sendEmail(to: string, subject: string, html: string) {
-  if (!process.env.RESEND_API_KEY) {
-    console.error("No RESEND_API_KEY found, skipping email.");
-    return { ok: false, error: "No API key" };
+  if (!process.env.VITE_GMAIL_USER || !process.env.VITE_GMAIL_APP_PASSWORD) {
+    console.error("No Gmail credentials found, skipping email.");
+    return { ok: false, error: "No Gmail credentials" };
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_ADDRESS,
-      to: [to],
+    const info = await transporter.sendMail({
+      from: `"Festa Updates" <${process.env.VITE_GMAIL_USER}>`,
+      to,
       subject,
       html,
     });
-    if (error) {
-      console.error("Resend error:", error);
-      return { ok: false, error: error.message };
-    }
-    return { ok: true, id: data?.id };
+    
+    console.log("Email sent successfully: ", info.messageId);
+    return { ok: true, id: info.messageId };
   } catch (error: any) {
-    console.error("Failed to send email:", error);
+    console.error("Failed to send email via Nodemailer:", error);
     return { ok: false, error: error.message };
   }
 }

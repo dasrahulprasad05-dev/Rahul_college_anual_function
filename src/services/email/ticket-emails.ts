@@ -14,7 +14,7 @@ type Input = {
 };
 
 export const sendTicketConfirmation = createServerFn({ method: "POST" })
-  .inputValidator((data: Input) => data)
+  .validator((data: Input) => data)
   .handler(async ({ data }) => {
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(data.qrToken)}`;
     const priceLine = data.priceCents ? `₹${(data.priceCents / 100).toFixed(2)}` : "Free";
@@ -50,7 +50,7 @@ export const sendTicketConfirmation = createServerFn({ method: "POST" })
   });
 
 export const sendScanConfirmation = createServerFn({ method: "POST" })
-  .inputValidator((data: { recipient: string; eventName: string; itemName: string; venue: string }) => data)
+  .validator((data: { recipient: string; eventName: string; itemName: string; venue: string }) => data)
   .handler(async ({ data }) => {
     // Note: Dynamically import scanConfirmationEmail if it needs access to BRAND which might be client-side only 
     // or just import it statically if it's safe for server.
