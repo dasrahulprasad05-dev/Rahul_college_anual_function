@@ -6,14 +6,14 @@
       "headers": {
         "cache-control": "s-maxage=31536000"
       },
-      "src": "/assets/(.*)"
+      "src": "/assets/.*"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/__fallback"
+      "dest": "/__nitro"
     }
   ]
 }
