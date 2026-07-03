@@ -46,7 +46,7 @@ export async function seedDatabase() {
         venue: e.venue,
         event_date: eventDate.toISOString(),
         starts_at: eventDate.toISOString(),
-        published: true,
+        is_published: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
