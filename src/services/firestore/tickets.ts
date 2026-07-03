@@ -1,4 +1,15 @@
-import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, where, runTransaction } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  runTransaction,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export interface Ticket {
@@ -18,7 +29,7 @@ export const ticketsService = {
   async getUserTickets(userId: string) {
     const q = query(collection(db, "tickets"), where("user_id", "==", userId));
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as Ticket));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Ticket);
   },
 
   async getTicketByToken(qrToken: string) {
@@ -54,7 +65,7 @@ export const ticketsService = {
         qr_token: qrToken,
         status: "paid",
         price_cents: itemData.price_cents || 0,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
       transaction.set(newTicketRef, ticketData);
     });
@@ -72,9 +83,9 @@ export const ticketsService = {
     await updateDoc(doc(db, "tickets", ticket.id), {
       status: "used",
       used_at: new Date().toISOString(),
-      used_by: volunteerId
+      used_by: volunteerId,
     });
 
     return ticket;
-  }
+  },
 };

@@ -10,9 +10,15 @@ export const Route = createFileRoute("/events/")({
   head: () => ({
     meta: [
       { title: "All Events — Festa" },
-      { name: "description", content: "Browse every published event of the annual function and book your QR ticket." },
+      {
+        name: "description",
+        content: "Browse every published event of the annual function and book your QR ticket.",
+      },
       { property: "og:title", content: "All Events — Festa" },
-      { property: "og:description", content: "Browse every published event of the annual function and book your QR ticket." },
+      {
+        property: "og:description",
+        content: "Browse every published event of the annual function and book your QR ticket.",
+      },
     ],
   }),
   component: AllEvents,
@@ -41,7 +47,8 @@ function AllEvents() {
             All <span className="text-gradient-neon">events</span>
           </h1>
           <p className="text-muted-foreground mt-3 max-w-xl">
-            Tap any card to see items, prices, and live seat counts. Booking takes a single tap once you're signed in.
+            Tap any card to see items, prices, and live seat counts. Booking takes a single tap once
+            you're signed in.
           </p>
         </motion.div>
 
@@ -82,16 +89,22 @@ function AllEvents() {
                     <div
                       aria-hidden
                       className="absolute -top-16 -right-16 w-44 h-44 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition duration-500"
-                      style={{ background: `radial-gradient(circle, ${c.primary}, transparent 70%)` }}
+                      style={{
+                        background: `radial-gradient(circle, ${c.primary}, transparent 70%)`,
+                      }}
                     />
                     <div className="relative flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <h3 className="font-display text-2xl uppercase line-clamp-2 transition-colors duration-500 group-hover:[background:var(--gd)] group-hover:bg-clip-text group-hover:text-transparent"
-                            style={{ ["--gd" as string]: c.gradient }}>
+                        <h3
+                          className="font-display text-2xl uppercase line-clamp-2 transition-colors duration-500 group-hover:[background:var(--gd)] group-hover:bg-clip-text group-hover:text-transparent"
+                          style={{ ["--gd" as string]: c.gradient }}
+                        >
                           {e.name}
                         </h3>
                         {e.description && (
-                          <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">{e.description}</p>
+                          <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
+                            {e.description}
+                          </p>
                         )}
                       </div>
                       <div
@@ -102,10 +115,14 @@ function AllEvents() {
                       </div>
                     </div>
                     <div className="relative flex items-center gap-4 mt-5 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" style={{ color: c.primary }} />
-                        {new Date(e.event_date).toLocaleDateString(undefined, { dateStyle: "medium" })}
-                      </span>
+                      {e.event_date && (
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4" style={{ color: c.primary }} />
+                          {new Date(e.event_date).toLocaleDateString(undefined, {
+                            dateStyle: "medium",
+                          })}
+                        </span>
+                      )}
                       {e.venue && (
                         <span className="flex items-center gap-1.5">
                           <MapPin className="w-4 h-4" style={{ color: c.secondary }} />

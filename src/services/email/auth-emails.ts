@@ -8,7 +8,7 @@ type Input = {
 };
 
 // Called after a user creates an account or signs in for the first time.
-// Since we don't have server middleware to easily verify tokens here, 
+// Since we don't have server middleware to easily verify tokens here,
 // the client will call this and track if it sent the email.
 export const sendWelcomeIfFirstTime = createServerFn({ method: "POST" })
   .inputValidator((data: Input) => data)
@@ -21,5 +21,9 @@ export const sendWelcomeIfFirstTime = createServerFn({ method: "POST" })
 
 // Stubs for backward compatibility during migration
 // auth.tsx handles these directly via Firebase now
-export const sendSignupVerification = createServerFn({ method: "POST" }).handler(async () => ({ ok: true as const }));
-export const sendPasswordReset = createServerFn({ method: "POST" }).handler(async () => ({ ok: true as const }));
+export const sendSignupVerification = createServerFn({ method: "POST" }).handler(async () => ({
+  ok: true as const,
+}));
+export const sendPasswordReset = createServerFn({ method: "POST" }).handler(async () => ({
+  ok: true as const,
+}));

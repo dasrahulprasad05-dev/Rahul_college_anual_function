@@ -5,8 +5,8 @@
 const BRAND = {
   name: "Festa",
   tagline: "College Annual Function",
-  primary: "#F5B301",   // gold
-  accent: "#FF3D8A",    // neon pink
+  primary: "#F5B301", // gold
+  accent: "#FF3D8A", // neon pink
   bg: "#0B0B12",
   card: "#141420",
   text: "#F4F4F7",

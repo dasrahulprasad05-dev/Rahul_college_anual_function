@@ -46,26 +46,23 @@ function EventDetail() {
       const q = query(
         collection(db, "tickets"),
         where("user_id", "==", user!.id),
-        where("event_id", "==", eventId)
+        where("event_id", "==", eventId),
       );
       const snap = await getDocs(q);
       return snap.docs.map((d) => d.data());
     },
   });
 
-  const bookedItemIds = new Set((myTickets ?? []).filter((t) => t.status !== "cancelled").map((t) => t.item_id));
+  const bookedItemIds = new Set(
+    (myTickets ?? []).filter((t) => t.status !== "cancelled").map((t) => t.item_id),
+  );
 
   const book = useMutation({
     mutationFn: async (item: { id: string; price_cents: number; event_id?: string }) => {
       if (!user) throw new Error("Please sign in");
-      
-      const ticket = await ticketsService.bookTicket({
-        userId: user.id,
-        eventId: eventId,
-        itemId: item.id,
-        priceCents: item.price_cents
-      });
-      return { id: ticket.id };
+
+      const ticketId = await ticketsService.bookTicket(user.id, eventId, item.id);
+      return { id: ticketId };
     },
     onSuccess: (ticket) => {
       toast.success("Ticket booked! Check 'My Tickets'.");
@@ -73,7 +70,7 @@ function EventDetail() {
       qc.invalidateQueries({ queryKey: ["tickets"] });
       qc.invalidateQueries({ queryKey: ["items", eventId] }); // Refresh booked counts
       if (ticket?.id) {
-        sendConfirmation({ data: { ticketId: ticket.id } })
+        sendConfirmation({ data: { ticketId: ticket.id } as any }) // Hack for fast typing if API changed
           .then((r) => {
             if (r?.ok) toast.success("Confirmation email sent");
           })
@@ -87,8 +84,12 @@ function EventDetail() {
     <div className="min-h-screen">
       <Navbar />
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <Link to="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="w-4 h-4 mr-1" />Back to events
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back to events
         </Link>
 
         {event && (
@@ -96,8 +97,18 @@ function EventDetail() {
             <h1 className="text-4xl font-bold text-gradient-gold">{event.name}</h1>
             {event.description && <p className="mt-3 text-muted-foreground">{event.description}</p>}
             <div className="flex flex-wrap gap-4 mt-5 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" />{new Date(event.event_date).toLocaleDateString(undefined, { dateStyle: "full" })}</span>
-              {event.venue && <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" />{event.venue}</span>}
+              {event.event_date && (
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  {new Date(event.event_date).toLocaleDateString(undefined, { dateStyle: "full" })}
+                </span>
+              )}
+              {event.venue && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4" />
+                  {event.venue}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -119,24 +130,54 @@ function EventDetail() {
               const soldOut = available !== null && available <= 0;
 
               return (
-                <div key={item.id} className="rounded-xl border border-border/60 bg-card/60 p-5 flex flex-col md:flex-row md:items-center gap-4">
+                <div
+                  key={item.id}
+                  className="rounded-xl border border-border/60 bg-card/60 p-5 flex flex-col md:flex-row md:items-center gap-4"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      {item.category && <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">{item.category}</span>}
+                      {item.category && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-accent/20 text-accent-foreground">
+                          {item.category}
+                        </span>
+                      )}
                       <h3 className="font-semibold text-lg">{item.name}</h3>
                     </div>
-                    {item.description && <p className="text-sm text-muted-foreground mt-1">{item.description}</p>}
+                    {item.description && (
+                      <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                    )}
                     <div className="flex flex-wrap gap-3 mt-2 text-xs text-muted-foreground">
-                      {item.starts_at && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(item.starts_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</span>}
-                      {item.venue && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{item.venue}</span>}
+                      {item.starts_at && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(item.starts_at).toLocaleString(undefined, {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </span>
+                      )}
+                      {item.venue && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {item.venue}
+                        </span>
+                      )}
                     </div>
                     <div className="mt-2 text-xs">
                       {capacity === null ? (
-                        <span className="text-muted-foreground">{booked} booked · unlimited seats</span>
+                        <span className="text-muted-foreground">
+                          {booked} booked · unlimited seats
+                        </span>
                       ) : soldOut ? (
                         <span className="text-destructive font-medium">Sold out</span>
                       ) : (
-                        <span className={available <= 10 ? "text-primary font-medium" : "text-muted-foreground"}>
+                        <span
+                          className={
+                            (available ?? 0) <= 10
+                              ? "text-primary font-medium"
+                              : "text-muted-foreground"
+                          }
+                        >
                           {available} of {capacity} seats left
                         </span>
                       )}
@@ -144,7 +185,9 @@ function EventDetail() {
                         <div className="mt-1 h-1.5 w-40 rounded-full bg-muted overflow-hidden">
                           <div
                             className="h-full gradient-gold"
-                            style={{ width: `${Math.min(100, (booked / Math.max(capacity, 1)) * 100)}%` }}
+                            style={{
+                              width: `${Math.min(100, (booked / Math.max(capacity, 1)) * 100)}%`,
+                            }}
                           />
                         </div>
                       )}
@@ -153,16 +196,27 @@ function EventDetail() {
                   <div className="flex items-center gap-3 md:flex-col md:items-end">
                     <div className="text-right">
                       <div className="text-2xl font-bold">
-                        {item.price_cents === 0 ? "Free" : `₹${(item.price_cents / 100).toFixed(0)}`}
+                        {item.price_cents === 0
+                          ? "Free"
+                          : `₹${(item.price_cents / 100).toFixed(0)}`}
                       </div>
                     </div>
                     {isBooked ? (
-                      <Button variant="outline" disabled><Ticket className="w-4 h-4 mr-1.5" />Booked</Button>
+                      <Button variant="outline" disabled>
+                        <Ticket className="w-4 h-4 mr-1.5" />
+                        Booked
+                      </Button>
                     ) : soldOut ? (
-                      <Button variant="outline" disabled>Sold out</Button>
+                      <Button variant="outline" disabled>
+                        Sold out
+                      </Button>
                     ) : (
                       <Button
-                        onClick={() => user ? book.mutate(item) : navigate({ to: "/auth", search: { redirect: `/events/${eventId}` } })}
+                        onClick={() =>
+                          user
+                            ? book.mutate(item)
+                            : navigate({ to: "/auth", search: { redirect: `/events/${eventId}` } })
+                        }
                         disabled={book.isPending}
                         className="gradient-gold text-primary-foreground hover:opacity-90"
                       >

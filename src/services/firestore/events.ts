@@ -1,4 +1,15 @@
-import { collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, query, where, orderBy } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export interface AppEvent {
@@ -23,6 +34,8 @@ export interface EventItem {
   capacity?: number;
   booked_count: number;
   price_cents: number;
+  venue?: string;
+  category?: string;
 }
 
 export const eventsService = {
@@ -34,7 +47,7 @@ export const eventsService = {
       q = query(eventsRef, where("is_published", "==", true), orderBy("event_date", "asc"));
     }
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as AppEvent));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as AppEvent);
   },
 
   async getEvent(id: string) {
@@ -61,12 +74,12 @@ export const eventsService = {
   async getEventItems(eventId: string) {
     const itemsRef = collection(db, `events/${eventId}/items`);
     const snap = await getDocs(itemsRef);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as EventItem));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as EventItem);
   },
 
   async createEventItem(eventId: string, data: Omit<EventItem, "id" | "event_id">) {
     const newDoc = doc(collection(db, `events/${eventId}/items`));
     await setDoc(newDoc, { ...data, event_id: eventId });
     return newDoc.id;
-  }
+  },
 };

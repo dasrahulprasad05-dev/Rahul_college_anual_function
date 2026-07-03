@@ -11,7 +11,11 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Festa — College Annual Function 2026" },
-      { name: "description", content: "Browse and book QR-coded tickets for performances, competitions, and ceremonies at the annual function." },
+      {
+        name: "description",
+        content:
+          "Browse and book QR-coded tickets for performances, competitions, and ceremonies at the annual function.",
+      },
     ],
   }),
   component: Index,
@@ -92,10 +96,23 @@ function Index() {
               transition={{ delay: 0.65, duration: 0.6 }}
               className="flex gap-3"
             >
-              <Button size="lg" className="gradient-gold text-primary-foreground hover:opacity-90 group" asChild>
-                <Link to="/events"><Ticket className="w-4 h-4 mr-2" />Browse events<ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" /></Link>
+              <Button
+                size="lg"
+                className="gradient-gold text-primary-foreground hover:opacity-90 group"
+                asChild
+              >
+                <Link to="/events">
+                  <Ticket className="w-4 h-4 mr-2" />
+                  Browse events
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-accent/50 hover:border-accent" asChild>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-accent/50 hover:border-accent"
+                asChild
+              >
                 <Link to="/tickets">My tickets</Link>
               </Button>
             </motion.div>
@@ -111,8 +128,21 @@ function Index() {
         >
           <div className="flex whitespace-nowrap animate-marquee w-max">
             {[...marqueeWords, ...marqueeWords, ...marqueeWords].map((w, i) => (
-              <span key={i} className="font-display text-3xl md:text-5xl uppercase mx-8 flex items-center gap-8">
-                <span className={i % 3 === 0 ? "text-gradient-neon" : i % 3 === 1 ? "text-foreground" : "text-accent"}>{w}</span>
+              <span
+                key={i}
+                className="font-display text-3xl md:text-5xl uppercase mx-8 flex items-center gap-8"
+              >
+                <span
+                  className={
+                    i % 3 === 0
+                      ? "text-gradient-neon"
+                      : i % 3 === 1
+                        ? "text-foreground"
+                        : "text-accent"
+                  }
+                >
+                  {w}
+                </span>
                 <Sparkles className="w-6 h-6 text-primary shrink-0" />
               </span>
             ))}
@@ -124,9 +154,24 @@ function Index() {
       <section className="max-w-6xl mx-auto px-4 py-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[
-            { icon: Ticket, title: "QR Tickets", desc: "Unique QR per ticket. Delivered instantly to your account.", color: "var(--neon-pink)" },
-            { icon: ScanLine, title: "Scan & enter", desc: "Volunteers scan at the gate — no paper, no lines, no fakes.", color: "var(--neon-cyan)" },
-            { icon: Zap, title: "Item-level access", desc: "Pick exactly the shows you want — every item booked separately.", color: "var(--neon-yellow)" },
+            {
+              icon: Ticket,
+              title: "QR Tickets",
+              desc: "Unique QR per ticket. Delivered instantly to your account.",
+              color: "var(--neon-pink)",
+            },
+            {
+              icon: ScanLine,
+              title: "Scan & enter",
+              desc: "Volunteers scan at the gate — no paper, no lines, no fakes.",
+              color: "var(--neon-cyan)",
+            },
+            {
+              icon: Zap,
+              title: "Item-level access",
+              desc: "Pick exactly the shows you want — every item booked separately.",
+              color: "var(--neon-yellow)",
+            },
           ].map((f, i) => (
             <motion.div
               key={f.title}
@@ -144,7 +189,10 @@ function Index() {
               />
               <div
                 className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                style={{ background: `color-mix(in oklab, ${f.color} 18%, transparent)`, color: f.color }}
+                style={{
+                  background: `color-mix(in oklab, ${f.color} 18%, transparent)`,
+                  color: f.color,
+                }}
               >
                 <f.icon className="w-5 h-5" />
               </div>
@@ -166,7 +214,9 @@ function Index() {
         >
           <div>
             <span className="text-xs tracking-[0.3em] text-accent uppercase">— Line-up</span>
-            <h2 className="font-display text-5xl md:text-6xl mt-2 uppercase">Upcoming <span className="text-gradient-neon">events</span></h2>
+            <h2 className="font-display text-5xl md:text-6xl mt-2 uppercase">
+              Upcoming <span className="text-gradient-neon">events</span>
+            </h2>
           </div>
         </motion.div>
 
@@ -178,7 +228,9 @@ function Index() {
           </div>
         ) : !events?.length ? (
           <div className="rounded-2xl border border-dashed border-border p-12 text-center">
-            <p className="text-muted-foreground">No events published yet. Admins can create events from the Admin panel.</p>
+            <p className="text-muted-foreground">
+              No events published yet. Admins can create events from the Admin panel.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -205,26 +257,43 @@ function Index() {
                     <div
                       aria-hidden
                       className="absolute -top-20 -right-20 w-56 h-56 rounded-full blur-3xl opacity-0 group-hover:opacity-80 transition duration-500"
-                      style={{ background: `radial-gradient(circle, ${c.primary}, transparent 70%)` }}
+                      style={{
+                        background: `radial-gradient(circle, ${c.primary}, transparent 70%)`,
+                      }}
                     />
                     <div className="relative flex items-start justify-between gap-4">
                       <div className="min-w-0">
-                        <h3 className="font-display text-2xl md:text-3xl uppercase transition-colors duration-500 group-hover:bg-clip-text group-hover:text-transparent"
-                            style={{ ["--gd" as string]: c.gradient, backgroundImage: "var(--gd)" }}>
+                        <h3
+                          className="font-display text-2xl md:text-3xl uppercase transition-colors duration-500 group-hover:bg-clip-text group-hover:text-transparent"
+                          style={{ ["--gd" as string]: c.gradient, backgroundImage: "var(--gd)" }}
+                        >
                           {e.name}
                         </h3>
-                        {e.description && <p className="text-muted-foreground mt-2 line-clamp-2 max-w-md">{e.description}</p>}
+                        {e.description && (
+                          <p className="text-muted-foreground mt-2 line-clamp-2 max-w-md">
+                            {e.description}
+                          </p>
+                        )}
                       </div>
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform"
-                           style={{ background: c.gradient, boxShadow: c.glow }}>
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform"
+                        style={{ background: c.gradient, boxShadow: c.glow }}
+                      >
                         <ArrowRight className="w-5 h-5 text-white" />
                       </div>
                     </div>
                     <div className="relative flex items-center gap-4 mt-5 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4 transition-colors" style={{ color: c.primary }} />
-                        {new Date(e.event_date).toLocaleDateString(undefined, { dateStyle: "medium" })}
-                      </span>
+                      {e.event_date && (
+                        <span className="flex items-center gap-1.5">
+                          <Calendar
+                            className="w-4 h-4 transition-colors"
+                            style={{ color: c.primary }}
+                          />
+                          {new Date(e.event_date).toLocaleDateString(undefined, {
+                            dateStyle: "medium",
+                          })}
+                        </span>
+                      )}
                       {e.venue && (
                         <span className="flex items-center gap-1.5">
                           <MapPin className="w-4 h-4" style={{ color: c.secondary }} />

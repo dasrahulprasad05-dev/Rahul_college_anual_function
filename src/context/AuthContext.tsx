@@ -13,7 +13,7 @@ type Role = "admin" | "volunteer" | "student";
 // We adapt the User interface slightly for compatibility, Firebase user has .uid instead of .id
 // Let's create an AppUser type that has .id
 export interface AppUser extends User {
-  id: string; 
+  id: string;
 }
 
 interface AuthCtx {
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (firebaseUser) {
         // App compatibility mapping
         const appUser = firebaseUser as AppUser;
-        appUser.id = firebaseUser.uid; 
+        appUser.id = firebaseUser.uid;
         setUser(appUser);
         setSession({ user: appUser }); // Mock session object
 
@@ -74,7 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     isAdmin: roles.includes("admin"),
     isVolunteer: roles.includes("volunteer") || roles.includes("admin"),
-    signOut: async () => { await firebaseSignOut(auth); },
+    signOut: async () => {
+      await firebaseSignOut(auth);
+    },
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,8 +3,16 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ResponsiveContainer,
-  BarChart, Bar, Cell, XAxis, YAxis, Tooltip, CartesianGrid,
-  AreaChart, Area, Legend,
+  BarChart,
+  Bar,
+  Cell,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  AreaChart,
+  Area,
+  Legend,
 } from "recharts";
 import { format, subDays, startOfDay } from "date-fns";
 import { db } from "@/lib/firebase";
@@ -12,7 +20,15 @@ import { collection, getDocs, collectionGroup } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, IndianRupee, Ticket, ScanLine, Users, TrendingUp, Calendar } from "lucide-react";
+import {
+  AlertTriangle,
+  IndianRupee,
+  Ticket,
+  ScanLine,
+  Users,
+  TrendingUp,
+  Calendar,
+} from "lucide-react";
 import { eventColors } from "@/lib/event-color";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -20,10 +36,24 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 type EventRow = { id: string; name: string; event_date: string };
-type ItemRow = { id: string; event_id: string; price_cents: number; capacity: number | null; booked_count: number };
-type TicketRow = { id: string; item_id: string; status: "reserved" | "paid" | "used" | "cancelled"; price_cents: number; created_at: string; used_at: string | null };
+type ItemRow = {
+  id: string;
+  event_id: string;
+  price_cents: number;
+  capacity: number | null;
+  booked_count: number;
+};
+type TicketRow = {
+  id: string;
+  item_id: string;
+  status: "reserved" | "paid" | "used" | "cancelled";
+  price_cents: number;
+  created_at: string;
+  used_at: string | null;
+};
 
-const INR = (cents: number) => `₹${(cents / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+const INR = (cents: number) =>
+  `₹${(cents / 100).toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
 
 function DashboardPage() {
   const { isAdmin, loading, user } = useAuth();
@@ -40,9 +70,9 @@ function DashboardPage() {
       ]);
 
       return {
-        events: evRes.docs.map(d => ({ id: d.id, ...d.data() })) as EventRow[],
-        items: itRes.docs.map(d => ({ id: d.id, ...d.data() })) as ItemRow[],
-        tickets: tkRes.docs.map(d => ({ id: d.id, ...d.data() })) as TicketRow[],
+        events: evRes.docs.map((d) => ({ id: d.id, ...d.data() })) as EventRow[],
+        items: itRes.docs.map((d) => ({ id: d.id, ...d.data() })) as ItemRow[],
+        tickets: tkRes.docs.map((d) => ({ id: d.id, ...d.data() })) as TicketRow[],
         usersCount: usrRes.size,
       };
     },
@@ -102,9 +132,10 @@ function DashboardPage() {
       return {
         date: format(d, "MMM d"),
         registrations: dayTickets.length,
-        revenue: dayTickets
-          .filter((t) => t.status === "paid" || t.status === "used")
-          .reduce((s, t) => s + t.price_cents, 0) / 100,
+        revenue:
+          dayTickets
+            .filter((t) => t.status === "paid" || t.status === "used")
+            .reduce((s, t) => s + t.price_cents, 0) / 100,
       };
     });
 
@@ -121,16 +152,27 @@ function DashboardPage() {
     };
   }, [data]);
 
-  if (loading) return <div className="min-h-screen"><Navbar /></div>;
+  if (loading)
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+      </div>
+    );
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen"><Navbar />
+      <div className="min-h-screen">
+        <Navbar />
         <div className="max-w-md mx-auto px-4 py-16 text-center">
           <AlertTriangle className="w-12 h-12 mx-auto text-accent" />
           <h1 className="text-2xl font-bold mt-4">Admin access required</h1>
-          <p className="text-muted-foreground mt-2">You're signed in as <span className="font-mono text-xs">{user?.email}</span> but don't have the admin role.</p>
-          <Button asChild className="mt-6"><Link to="/">Go home</Link></Button>
+          <p className="text-muted-foreground mt-2">
+            You're signed in as <span className="font-mono text-xs">{user?.email}</span> but don't
+            have the admin role.
+          </p>
+          <Button asChild className="mt-6">
+            <Link to="/">Go home</Link>
+          </Button>
         </div>
       </div>
     );
@@ -143,11 +185,14 @@ function DashboardPage() {
         <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2">
-              <TrendingUp className="w-7 h-7 text-primary" />Dashboard
+              <TrendingUp className="w-7 h-7 text-primary" />
+              Dashboard
             </h1>
             <p className="text-muted-foreground">Live analytics across all events.</p>
           </div>
-          <Button asChild variant="outline"><Link to="/admin">Manage events →</Link></Button>
+          <Button asChild variant="outline">
+            <Link to="/admin">Manage events →</Link>
+          </Button>
         </div>
 
         {/* KPI cards */}
@@ -167,7 +212,10 @@ function DashboardPage() {
             <Panel title="Last 14 days" subtitle="Daily registrations and revenue">
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={stats.series} margin={{ top: 10, right: 16, left: -8, bottom: 0 }}>
+                  <AreaChart
+                    data={stats.series}
+                    margin={{ top: 10, right: 16, left: -8, bottom: 0 }}
+                  >
                     <defs>
                       <linearGradient id="gReg" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
@@ -178,13 +226,31 @@ function DashboardPage() {
                         <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                      opacity={0.4}
+                    />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <Tooltip content={<DarkTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Area type="monotone" dataKey="registrations" name="Registrations" stroke="hsl(var(--primary))" fill="url(#gReg)" strokeWidth={2} />
-                    <Area type="monotone" dataKey="revenue" name="Revenue (₹)" stroke="hsl(var(--accent))" fill="url(#gRev)" strokeWidth={2} />
+                    <Area
+                      type="monotone"
+                      dataKey="registrations"
+                      name="Registrations"
+                      stroke="hsl(var(--primary))"
+                      fill="url(#gReg)"
+                      strokeWidth={2}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      name="Revenue (₹)"
+                      stroke="hsl(var(--accent))"
+                      fill="url(#gRev)"
+                      strokeWidth={2}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -195,11 +261,19 @@ function DashboardPage() {
                 <ChartHorizontal data={stats.perEvent} dataKey="registrations" />
               </Panel>
               <Panel title="Revenue per event" subtitle="Paid + used tickets, in ₹">
-                <ChartHorizontal data={stats.perEvent} dataKey="revenue" valueFormatter={(v) => INR(v)} />
+                <ChartHorizontal
+                  data={stats.perEvent}
+                  dataKey="revenue"
+                  valueFormatter={(v) => INR(v)}
+                />
               </Panel>
             </div>
 
-            <Panel className="mt-6" title="Check-ins per event" subtitle="Scanned tickets at the gate">
+            <Panel
+              className="mt-6"
+              title="Check-ins per event"
+              subtitle="Scanned tickets at the gate"
+            >
               <ChartHorizontal data={stats.perEvent} dataKey="scans" />
             </Panel>
 
@@ -218,13 +292,27 @@ function DashboardPage() {
                   </thead>
                   <tbody>
                     {stats.perEvent.map((e) => (
-                      <tr key={e.id} className="border-t border-border/40 hover:bg-card/60 transition">
+                      <tr
+                        key={e.id}
+                        className="border-t border-border/40 hover:bg-card/60 transition"
+                      >
                         <td className="px-3 py-2.5">
                           <div className="flex items-center gap-2">
-                            <span className="w-2 h-6 rounded-full" style={{ background: e.color }} />
+                            <span
+                              className="w-2 h-6 rounded-full"
+                              style={{ background: e.color }}
+                            />
                             <div>
-                              <Link to="/events/$eventId" params={{ eventId: e.id }} className="font-medium hover:underline">{e.name}</Link>
-                              <div className="text-xs text-muted-foreground">{new Date(e.date).toLocaleDateString()}</div>
+                              <Link
+                                to="/events/$eventId"
+                                params={{ eventId: e.id }}
+                                className="font-medium hover:underline"
+                              >
+                                {e.name}
+                              </Link>
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(e.date).toLocaleDateString()}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -233,15 +321,29 @@ function DashboardPage() {
                         <td className="px-3 py-2.5 text-right tabular-nums">{INR(e.revenue)}</td>
                         <td className="px-3 py-2.5 text-right tabular-nums">
                           {e.capacity > 0 ? (
-                            <span className={e.fill >= 90 ? "text-destructive" : e.fill >= 60 ? "text-accent" : "text-muted-foreground"}>
+                            <span
+                              className={
+                                e.fill >= 90
+                                  ? "text-destructive"
+                                  : e.fill >= 60
+                                    ? "text-accent"
+                                    : "text-muted-foreground"
+                              }
+                            >
                               {e.fill}%
                             </span>
-                          ) : <span className="text-muted-foreground">—</span>}
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
                     {stats.perEvent.length === 0 && (
-                      <tr><td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">No events yet.</td></tr>
+                      <tr>
+                        <td colSpan={5} className="px-3 py-8 text-center text-muted-foreground">
+                          No events yet.
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
@@ -254,7 +356,15 @@ function DashboardPage() {
   );
 }
 
-function Kpi({ icon: Icon, label, value }: { icon: typeof Ticket; label: string; value: string | number }) {
+function Kpi({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Ticket;
+  label: string;
+  value: string | number;
+}) {
   return (
     <div className="rounded-2xl border border-border/60 bg-card/60 p-5">
       <Icon className="w-5 h-5 text-primary mb-2" />
@@ -264,7 +374,17 @@ function Kpi({ icon: Icon, label, value }: { icon: typeof Ticket; label: string;
   );
 }
 
-function Panel({ title, subtitle, children, className = "" }: { title: string; subtitle?: string; children: React.ReactNode; className?: string }) {
+function Panel({
+  title,
+  subtitle,
+  children,
+  className = "",
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <section className={`rounded-2xl border border-border/60 bg-card/60 p-5 ${className}`}>
       <header className="mb-4">
@@ -278,17 +398,44 @@ function Panel({ title, subtitle, children, className = "" }: { title: string; s
 
 type ChartRow = { id: string; short: string; color: string; [k: string]: string | number };
 
-function ChartHorizontal({ data, dataKey, valueFormatter }: { data: ChartRow[]; dataKey: string; valueFormatter?: (v: number) => string }) {
+function ChartHorizontal({
+  data,
+  dataKey,
+  valueFormatter,
+}: {
+  data: ChartRow[];
+  dataKey: string;
+  valueFormatter?: (v: number) => string;
+}) {
   const rows = data.slice(0, 10);
   const height = Math.max(220, rows.length * 34 + 40);
   return (
     <div style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" opacity={0.4} />
-          <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={valueFormatter} />
-          <YAxis type="category" dataKey="short" width={120} stroke="hsl(var(--muted-foreground))" fontSize={11} />
-          <Tooltip content={<DarkTooltip valueFormatter={valueFormatter} />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.2 }} />
+          <CartesianGrid
+            strokeDasharray="3 3"
+            horizontal={false}
+            stroke="hsl(var(--border))"
+            opacity={0.4}
+          />
+          <XAxis
+            type="number"
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={11}
+            tickFormatter={valueFormatter}
+          />
+          <YAxis
+            type="category"
+            dataKey="short"
+            width={120}
+            stroke="hsl(var(--muted-foreground))"
+            fontSize={11}
+          />
+          <Tooltip
+            content={<DarkTooltip valueFormatter={valueFormatter} />}
+            cursor={{ fill: "hsl(var(--muted))", opacity: 0.2 }}
+          />
           <Bar dataKey={dataKey} radius={[0, 6, 6, 0]}>
             {rows.map((r) => (
               <Cell key={r.id} fill={r.color} />
@@ -300,7 +447,12 @@ function ChartHorizontal({ data, dataKey, valueFormatter }: { data: ChartRow[]; 
   );
 }
 
-function DarkTooltip({ active, payload, label, valueFormatter }: {
+function DarkTooltip({
+  active,
+  payload,
+  label,
+  valueFormatter,
+}: {
   active?: boolean;
   payload?: Array<{ name: string; value: number; color: string }>;
   label?: string;
@@ -314,7 +466,9 @@ function DarkTooltip({ active, payload, label, valueFormatter }: {
         <div key={i} className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
           <span className="text-muted-foreground">{p.name}:</span>
-          <span className="font-medium tabular-nums">{valueFormatter ? valueFormatter(p.value) : p.value}</span>
+          <span className="font-medium tabular-nums">
+            {valueFormatter ? valueFormatter(p.value) : p.value}
+          </span>
         </div>
       ))}
     </div>

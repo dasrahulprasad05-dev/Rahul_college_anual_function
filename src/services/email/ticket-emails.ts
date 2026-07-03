@@ -18,7 +18,7 @@ export const sendTicketConfirmation = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(data.qrToken)}`;
     const priceLine = data.priceCents ? `₹${(data.priceCents / 100).toFixed(2)}` : "Free";
-    
+
     // Formatting date string without relying on locale since it's server side
     const dateObj = new Date(data.eventDate);
     const dateStr = isNaN(dateObj.getTime()) ? data.eventDate : dateObj.toDateString();

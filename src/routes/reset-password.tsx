@@ -79,13 +79,33 @@ function ResetPasswordPage() {
             <form onSubmit={submit} className="space-y-4 mt-6">
               <div>
                 <Label htmlFor="password">New password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} className="mt-1.5" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="mt-1.5"
+                />
               </div>
               <div>
                 <Label htmlFor="confirm">Confirm password</Label>
-                <Input id="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required minLength={6} className="mt-1.5" />
+                <Input
+                  id="confirm"
+                  type="password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  required
+                  minLength={6}
+                  className="mt-1.5"
+                />
               </div>
-              <Button type="submit" disabled={busy} className="w-full gradient-gold text-primary-foreground hover:opacity-90">
+              <Button
+                type="submit"
+                disabled={busy}
+                className="w-full gradient-gold text-primary-foreground hover:opacity-90"
+              >
                 {busy ? "Updating..." : "Update password"}
               </Button>
             </form>

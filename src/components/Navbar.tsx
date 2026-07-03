@@ -19,35 +19,61 @@ export function Navbar() {
           {user && (
             <>
               <Button variant="ghost" size="sm" asChild>
-                <Link to="/tickets"><Ticket className="w-4 h-4 mr-1.5" />My Tickets</Link>
+                <Link to="/tickets">
+                  <Ticket className="w-4 h-4 mr-1.5" />
+                  My Tickets
+                </Link>
               </Button>
               {isVolunteer && (
                 <>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/volunteer"><Users className="w-4 h-4 mr-1.5" />Volunteer</Link>
+                    <Link to="/volunteer">
+                      <Users className="w-4 h-4 mr-1.5" />
+                      Volunteer
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/scan"><ScanLine className="w-4 h-4 mr-1.5" />Scan</Link>
+                    <Link to="/scan">
+                      <ScanLine className="w-4 h-4 mr-1.5" />
+                      Scan
+                    </Link>
                   </Button>
                 </>
               )}
               {isAdmin && (
                 <>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/dashboard"><BarChart3 className="w-4 h-4 mr-1.5" />Dashboard</Link>
+                    <Link to="/dashboard">
+                      <BarChart3 className="w-4 h-4 mr-1.5" />
+                      Dashboard
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/admin"><Shield className="w-4 h-4 mr-1.5" />Admin</Link>
+                    <Link to="/admin">
+                      <Shield className="w-4 h-4 mr-1.5" />
+                      Admin
+                    </Link>
                   </Button>
                 </>
               )}
-              <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate({ to: "/" }); }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  await signOut();
+                  navigate({ to: "/" });
+                }}
+              >
                 <LogOut className="w-4 h-4" />
               </Button>
             </>
           )}
           {!user && (
-            <Button size="sm" className="gradient-gold text-primary-foreground hover:opacity-90" asChild>
+            <Button
+              size="sm"
+              className="gradient-gold text-primary-foreground hover:opacity-90"
+              asChild
+            >
               <Link to="/auth">Sign in</Link>
             </Button>
           )}
