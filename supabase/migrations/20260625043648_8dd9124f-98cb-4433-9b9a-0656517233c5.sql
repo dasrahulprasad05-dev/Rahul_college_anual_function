@@ -1,7 +1,0 @@
-
--- Lock down search_path and revoke direct execute on internal trigger fns
-ALTER FUNCTION public.tg_set_updated_at() SET search_path = public;
-REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.handle_new_user_role() FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.tg_set_updated_at() FROM PUBLIC, anon, authenticated;
--- has_role must remain callable by authenticated users (used in RLS policies)

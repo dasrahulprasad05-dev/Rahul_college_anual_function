@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { eventsService } from "@/services/firestore/events";
 import { Navbar } from "@/components/Navbar";
 import { Calendar, MapPin, Ticket, ScanLine, Sparkles, ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,14 +23,8 @@ function Index() {
   const { data: events, isLoading } = useQuery({
     queryKey: ["events"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("is_published", true)
-        .order("event_date", { ascending: true })
-        .limit(20);
-      if (error) throw error;
-      return data;
+      const data = await eventsService.getEvents(true);
+      return data.slice(0, 20);
     },
   });
 

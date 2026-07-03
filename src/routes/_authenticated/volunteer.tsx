@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, collectionGroup } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, ScanLine, Calendar, CheckCircle2, Clock } from "lucide-react";
@@ -24,50 +25,69 @@ function VolunteerPage() {
     queryKey: ["volunteer-dashboard", user?.id],
     enabled: !!user && isVolunteer,
     queryFn: async () => {
-      const [assignsRes, scansRes] = await Promise.all([
-        supabase
-          .from("event_volunteers")
-          .select("event_id, events(id, name, event_date, venue)")
-          .eq("user_id", user!.id),
-        supabase
-          .from("tickets")
-          .select("id, used_at, item_id, items(name, event_id, events(name))")
-          .eq("used_by", user!.id)
-          .order("used_at", { ascending: false })
-          .limit(20),
-      ]);
-      if (assignsRes.error) throw assignsRes.error;
-      if (scansRes.error) throw scansRes.error;
+      // 1. Fetch Assignments
+      const assignsQ = query(collection(db, "event_volunteers"), where("user_id", "==", user!.id));
+      const assignsSnap = await getDocs(assignsQ);
+      const assignmentsRaw = assignsSnap.docs.map(d => d.data());
+      
+      const eventIds = assignmentsRaw.map((a: any) => a.event_id as string);
+      
+      const assignments = await Promise.all(assignmentsRaw.map(async (a: any) => {
+        const evSnap = await getDoc(doc(db, "events", a.event_id));
+        return {
+          event_id: a.event_id,
+          events: evSnap.exists() ? { id: evSnap.id, ...evSnap.data() } as any : null
+        };
+      }));
 
-      const assignments = (assignsRes.data ?? []) as unknown as Assignment[];
-      const eventIds = assignments.map((a) => a.event_id);
+      // 2. Fetch Recent Scans
+      const scansQ = query(
+        collection(db, "tickets"), 
+        where("used_by", "==", user!.id),
+        // Note: Firestore requires a composite index if combining equality and orderBy on different fields.
+        // Assuming we just fetch used tickets by this volunteer and sort in memory if index missing.
+      );
+      const scansSnap = await getDocs(scansQ);
+      let scans = scansSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      scans = scans.sort((a, b) => new Date(b.used_at).getTime() - new Date(a.used_at).getTime()).slice(0, 20);
 
-      // per-event stats
+      // Populate item/event for scans
+      scans = await Promise.all(scans.map(async (s) => {
+        const itemSnap = await getDoc(doc(db, `events/${s.event_id}/items/${s.item_id}`));
+        const evSnap = await getDoc(doc(db, "events", s.event_id));
+        return {
+          ...s,
+          items: {
+            name: itemSnap.exists() ? itemSnap.data().name : "—",
+            events: { name: evSnap.exists() ? evSnap.data().name : "" }
+          }
+        };
+      }));
+
+      // 3. Stats by event
       let statsByEvent = new Map<string, { total: number; scanned: number }>();
       if (eventIds.length) {
-        const { data: items } = await supabase.from("items").select("id, event_id").in("event_id", eventIds);
-        const itemIds = (items ?? []).map((i) => i.id);
-        if (itemIds.length) {
-          const { data: tickets } = await supabase
-            .from("tickets")
-            .select("item_id, status")
-            .in("item_id", itemIds)
-            .neq("status", "cancelled");
-          const itemToEvent = new Map((items ?? []).map((i) => [i.id, i.event_id]));
-          for (const t of tickets ?? []) {
-            const eid = itemToEvent.get(t.item_id);
-            if (!eid) continue;
-            const s = statsByEvent.get(eid) ?? { total: 0, scanned: 0 };
-            s.total += 1;
-            if (t.status === "used") s.scanned += 1;
-            statsByEvent.set(eid, s);
-          }
+        // Fetch all tickets for these events to calculate stats
+        // We'll just fetch items for these events, then tickets
+        for (const eid of eventIds) {
+          const tQ = query(collection(db, "tickets"), where("event_id", "==", eid));
+          const tSnap = await getDocs(tQ);
+          let total = 0;
+          let scanned = 0;
+          tSnap.forEach(d => {
+            const status = d.data().status;
+            if (status !== "cancelled") {
+              total++;
+              if (status === "used") scanned++;
+            }
+          });
+          statsByEvent.set(eid, { total, scanned });
         }
       }
 
       return {
         assignments,
-        scans: scansRes.data ?? [],
+        scans,
         statsByEvent,
       };
     },
@@ -112,7 +132,7 @@ function VolunteerPage() {
             </div>
           )}
           <div className="grid sm:grid-cols-2 gap-3">
-            {data?.assignments.map((a) => {
+            {data?.assignments.map((a: any) => {
               const e = a.events;
               if (!e) return null;
               const c = eventColors(e.id);
@@ -147,8 +167,8 @@ function VolunteerPage() {
             </div>
           )}
           <div className="rounded-2xl border border-border/60 bg-card/60 divide-y divide-border/40">
-            {data?.scans.map((s) => {
-              const item = s.items as unknown as { name: string; events: { name: string } | null } | null;
+            {data?.scans.map((s: any) => {
+              const item = s.items;
               return (
                 <div key={s.id} className="px-4 py-3 flex items-center justify-between">
                   <div>

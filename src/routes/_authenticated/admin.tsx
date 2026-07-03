@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { db } from "@/lib/firebase";
+import { collection, getCountFromServer, query, where, getDocs, collectionGroup } from "firebase/firestore";
+import { eventsService, AppEvent } from "@/services/firestore/events";
+import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,16 +44,16 @@ function AdminPage() {
     enabled: isAdmin,
     queryFn: async () => {
       const [events, tickets, used, users] = await Promise.all([
-        supabase.from("events").select("id", { count: "exact", head: true }),
-        supabase.from("tickets").select("id", { count: "exact", head: true }),
-        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "used"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        getCountFromServer(collection(db, "events")),
+        getCountFromServer(collection(db, "tickets")),
+        getCountFromServer(query(collection(db, "tickets"), where("status", "==", "used"))),
+        getCountFromServer(collection(db, "users")),
       ]);
       return {
-        events: events.count ?? 0,
-        tickets: tickets.count ?? 0,
-        used: used.count ?? 0,
-        users: users.count ?? 0,
+        events: events.data().count ?? 0,
+        tickets: tickets.data().count ?? 0,
+        used: used.data().count ?? 0,
+        users: users.data().count ?? 0,
       };
     },
   });
@@ -60,12 +62,14 @@ function AdminPage() {
     queryKey: ["admin-events"],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*, items(id, name, price_cents)")
-        .order("event_date", { ascending: true });
-      if (error) throw error;
-      return data as EventRow[];
+      const evs = await eventsService.getEvents(false);
+      const itemsSnap = await getDocs(collectionGroup(db, "items"));
+      const allItems = itemsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      return evs.map(e => ({
+        ...e,
+        items: allItems.filter(i => (i as any).event_id === e.id) as any,
+      })) as EventRow[];
     },
   });
 
@@ -76,8 +80,11 @@ function AdminPage() {
 
   const createEvent = useMutation({
     mutationFn: async (vals: EventForm) => {
-      const { error } = await supabase.from("events").insert(vals);
-      if (error) throw error;
+      await eventsService.createEvent({
+        ...vals,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => { invalidate(); toast.success("Event created"); },
     onError: (e: Error) => toast.error(e.message),
@@ -85,8 +92,10 @@ function AdminPage() {
 
   const updateEvent = useMutation({
     mutationFn: async ({ id, vals }: { id: string; vals: Partial<EventForm> }) => {
-      const { error } = await supabase.from("events").update(vals).eq("id", id);
-      if (error) throw error;
+      await eventsService.updateEvent(id, {
+        ...vals,
+        updated_at: new Date().toISOString(),
+      });
     },
     onSuccess: () => { invalidate(); toast.success("Event updated"); },
     onError: (e: Error) => toast.error(e.message),
@@ -94,8 +103,11 @@ function AdminPage() {
 
   const createItem = useMutation({
     mutationFn: async (vals: { event_id: string; name: string; description: string; starts_at: string | null; venue: string; price_cents: number; category: string }) => {
-      const { error } = await supabase.from("items").insert(vals);
-      if (error) throw error;
+      const { event_id, ...data } = vals;
+      await eventsService.createEventItem(event_id, {
+        ...data,
+        booked_count: 0
+      });
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-events"] }); toast.success("Item added"); },
     onError: (e: Error) => toast.error(e.message),
@@ -103,8 +115,7 @@ function AdminPage() {
 
   const deleteEvent = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("events").delete().eq("id", id);
-      if (error) throw error;
+      await eventsService.deleteEvent(id);
     },
     onSuccess: () => { invalidate(); toast.success("Event deleted"); },
     onError: (e: Error) => toast.error(e.message),

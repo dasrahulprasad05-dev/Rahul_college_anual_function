@@ -7,8 +7,9 @@ import {
   AreaChart, Area, Legend,
 } from "recharts";
 import { format, subDays, startOfDay } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, collectionGroup } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, IndianRupee, Ticket, ScanLine, Users, TrendingUp, Calendar } from "lucide-react";
@@ -32,19 +33,17 @@ function DashboardPage() {
     enabled: isAdmin,
     queryFn: async () => {
       const [evRes, itRes, tkRes, usrRes] = await Promise.all([
-        supabase.from("events").select("id,name,event_date").order("event_date", { ascending: true }),
-        supabase.from("items").select("id,event_id,price_cents,capacity,booked_count"),
-        supabase.from("tickets").select("id,item_id,status,price_cents,created_at,used_at"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
+        getDocs(collection(db, "events")),
+        getDocs(collectionGroup(db, "items")),
+        getDocs(collection(db, "tickets")),
+        getDocs(collection(db, "users")),
       ]);
-      if (evRes.error) throw evRes.error;
-      if (itRes.error) throw itRes.error;
-      if (tkRes.error) throw tkRes.error;
+
       return {
-        events: (evRes.data ?? []) as EventRow[],
-        items: (itRes.data ?? []) as ItemRow[],
-        tickets: (tkRes.data ?? []) as TicketRow[],
-        usersCount: usrRes.count ?? 0,
+        events: evRes.docs.map(d => ({ id: d.id, ...d.data() })) as EventRow[],
+        items: itRes.docs.map(d => ({ id: d.id, ...d.data() })) as ItemRow[],
+        tickets: tkRes.docs.map(d => ({ id: d.id, ...d.data() })) as TicketRow[],
+        usersCount: usrRes.size,
       };
     },
   });

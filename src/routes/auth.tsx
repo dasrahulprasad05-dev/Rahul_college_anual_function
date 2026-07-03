@@ -1,17 +1,23 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
-import { useAuth } from "@/lib/auth-context";
+import { auth, db } from "@/lib/firebase";
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup,
+  updateProfile
+} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { sendSignupVerification, sendPasswordReset } from "@/lib/auth-emails.functions";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -30,8 +36,6 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
-  const signupVerify = useServerFn(sendSignupVerification);
-  const requestReset = useServerFn(sendPasswordReset);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: redirect ?? "/tickets" });
@@ -42,25 +46,23 @@ function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        await signupVerify({
-          data: {
-            email,
-            password,
-            fullName: name,
-            redirectTo: window.location.origin,
-          },
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName: name });
+        // Create user profile in Firestore
+        await setDoc(doc(db, "users", cred.user.uid), {
+          full_name: name,
+          email: email,
+          role: "student", // default role
+          created_at: new Date().toISOString()
         });
-        toast.success("Verification email sent! Check your inbox to confirm.");
+        toast.success("Account created successfully!");
         setMode("signin");
       } else if (mode === "forgot") {
-        await requestReset({
-          data: { email, redirectTo: `${window.location.origin}/reset-password` },
-        });
+        await sendPasswordResetEmail(auth, email);
         toast.success("If that email exists, a reset link is on the way.");
         setMode("signin");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await signInWithEmailAndPassword(auth, email, password);
         toast.success("Welcome back!");
       }
     } catch (err) {
@@ -71,10 +73,19 @@ function AuthPage() {
   }
 
   async function google() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (result.error) toast.error(result.error.message ?? "Google sign-in failed");
+    try {
+      const provider = new GoogleAuthProvider();
+      const cred = await signInWithPopup(auth, provider);
+      // Ensure user document exists
+      await setDoc(doc(db, "users", cred.user.uid), {
+        full_name: cred.user.displayName,
+        email: cred.user.email,
+        role: "student", // default role, could check if exists first
+        created_at: new Date().toISOString()
+      }, { merge: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Google sign-in failed");
+    }
   }
 
   return (

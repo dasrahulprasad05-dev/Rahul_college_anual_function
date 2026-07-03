@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Ticket, ScanLine, Shield, LogOut, BarChart3, Users } from "lucide-react";
 import { Logo } from "@/components/Logo";

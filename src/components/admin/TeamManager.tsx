@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -22,21 +23,19 @@ export function TeamManager() {
     queryKey: ["team-data"],
     queryFn: async () => {
       const [profRes, roleRes, evRes, asgRes] = await Promise.all([
-        supabase.from("profiles").select("id, email, full_name").order("email"),
-        supabase.from("user_roles").select("user_id, role"),
-        supabase.from("events").select("id, name, event_date").order("event_date"),
-        supabase.from("event_volunteers").select("event_id, user_id"),
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "user_roles")),
+        getDocs(collection(db, "events")),
+        getDocs(collection(db, "event_volunteers")),
       ]);
-      if (profRes.error) throw profRes.error;
-      if (roleRes.error) throw roleRes.error;
-      if (evRes.error) throw evRes.error;
-      if (asgRes.error) throw asgRes.error;
-      return {
-        profiles: (profRes.data ?? []) as Profile[],
-        roles: (roleRes.data ?? []) as RoleRow[],
-        events: (evRes.data ?? []) as EventRow[],
-        assignments: (asgRes.data ?? []) as Assignment[],
-      };
+
+      const profiles = profRes.docs.map(d => ({ id: d.id, ...d.data() })) as Profile[];
+      // roles are stored as { user_id, role } or just { role } depending on schema. If user_roles uses user_id+role as doc id:
+      const roles = roleRes.docs.map(d => ({ ...d.data() })) as RoleRow[]; 
+      const events = evRes.docs.map(d => ({ id: d.id, ...d.data() })).sort((a: any, b: any) => new Date(a.event_date).getTime() - new Date(b.event_date).getTime()) as EventRow[];
+      const assignments = asgRes.docs.map(d => ({ ...d.data() })) as Assignment[];
+
+      return { profiles, roles, events, assignments };
     },
   });
 
@@ -44,12 +43,11 @@ export function TeamManager() {
 
   const setRole = useMutation({
     mutationFn: async ({ userId, role, enabled }: { userId: string; role: "admin" | "volunteer"; enabled: boolean }) => {
+      const roleId = `${userId}_${role}`;
       if (enabled) {
-        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
-        if (error && !String(error.message).includes("duplicate")) throw error;
+        await setDoc(doc(db, "user_roles", roleId), { user_id: userId, role });
       } else {
-        const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", role);
-        if (error) throw error;
+        await deleteDoc(doc(db, "user_roles", roleId));
       }
     },
     onSuccess: () => { invalidate(); toast.success("Role updated"); },
@@ -58,13 +56,11 @@ export function TeamManager() {
 
   const toggleAssignment = useMutation({
     mutationFn: async ({ userId, eventId, assigned }: { userId: string; eventId: string; assigned: boolean }) => {
+      const asgId = `${userId}_${eventId}`;
       if (assigned) {
-        const { error } = await supabase.from("event_volunteers").insert({ user_id: userId, event_id: eventId });
-        if (error && !String(error.message).includes("duplicate")) throw error;
+        await setDoc(doc(db, "event_volunteers", asgId), { user_id: userId, event_id: eventId });
       } else {
-        const { error } = await supabase.from("event_volunteers").delete()
-          .eq("user_id", userId).eq("event_id", eventId);
-        if (error) throw error;
+        await deleteDoc(doc(db, "event_volunteers", asgId));
       }
     },
     onSuccess: () => { invalidate(); },

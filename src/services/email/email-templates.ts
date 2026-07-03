@@ -1,11 +1,12 @@
-// Branded HTML email templates for Festa (Neon Carnival palette).
-// All templates return a full HTML document string.
+// email-templates.ts
+// Branded HTML email templates for Festa (Neon Carnival palette — gold + neon pink + dark bg).
+// Each function returns { subject, html } ready to pass to the Resend API.
 
 const BRAND = {
   name: "Festa",
   tagline: "College Annual Function",
-  primary: "#F5B301", // gold
-  accent: "#FF3D8A", // neon pink
+  primary: "#F5B301",   // gold
+  accent: "#FF3D8A",    // neon pink
   bg: "#0B0B12",
   card: "#141420",
   text: "#F4F4F7",
@@ -40,6 +41,7 @@ function button(url: string, label: string) {
   </div>`;
 }
 
+// ── Welcome email (sent on first sign-in after verification) ─────────────────
 export function welcomeEmail(name: string) {
   const inner = `
     <h1 style="margin:0 0 12px;font-size:26px;font-weight:800;color:${BRAND.text}">Welcome to ${BRAND.name}, ${name || "friend"} 🎉</h1>
@@ -47,7 +49,7 @@ export function welcomeEmail(name: string) {
       Your account is verified and ready to roll. Browse events, grab your QR-coded tickets, and just flash them at the gate — no lines, no paper.
     </p>
     <ul style="color:${BRAND.muted};font-size:14px;line-height:1.9;padding-left:20px;margin:0 0 8px">
-      <li>🎟️ Book tickets to Tech, Cultural, Sports & Workshop events</li>
+      <li>🎟️ Book tickets to Tech, Cultural, Sports &amp; Workshop events</li>
       <li>📱 Each ticket gets a unique QR code</li>
       <li>⚡ Instant check-in at the venue</li>
     </ul>`;
@@ -57,6 +59,7 @@ export function welcomeEmail(name: string) {
   };
 }
 
+// ── Email verification (sent during signup to confirm email address) ──────────
 export function verificationEmail(name: string, confirmUrl: string) {
   const inner = `
     <h1 style="margin:0 0 12px;font-size:26px;font-weight:800;color:${BRAND.text}">Verify your email, ${name || "there"} ✨</h1>
@@ -77,6 +80,7 @@ export function verificationEmail(name: string, confirmUrl: string) {
   };
 }
 
+// ── Password reset (sent when user requests forgot password) ─────────────────
 export function passwordResetEmail(name: string, resetUrl: string) {
   const inner = `
     <h1 style="margin:0 0 12px;font-size:26px;font-weight:800;color:${BRAND.text}">Reset your password 🔐</h1>

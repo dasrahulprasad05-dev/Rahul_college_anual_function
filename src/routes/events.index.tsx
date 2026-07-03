@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
+import { eventsService } from "@/services/firestore/events";
 import { Navbar } from "@/components/Navbar";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 import { eventColors } from "@/lib/event-color";
@@ -22,13 +22,7 @@ function AllEvents() {
   const { data: events, isLoading } = useQuery({
     queryKey: ["events", "all-published"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("is_published", true)
-        .order("event_date", { ascending: true });
-      if (error) throw error;
-      return data;
+      return eventsService.getEvents(true);
     },
   });
 

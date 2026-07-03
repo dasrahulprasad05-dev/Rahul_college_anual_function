@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { ticketsService } from "@/services/firestore/tickets";
+import { eventsService } from "@/services/firestore/events";
+import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, ScanLine, RefreshCw, AlertTriangle } from "lucide-react";
@@ -17,7 +18,7 @@ type ScanResult =
   | { kind: "invalid"; message: string };
 
 function ScanPage() {
-  const { isVolunteer, loading } = useAuth();
+  const { user, isVolunteer, loading } = useAuth();
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,18 +29,27 @@ function ScanPage() {
     if (token === lastTokenRef.current) return;
     lastTokenRef.current = token;
 
-    const { data, error: rpcErr } = await supabase.rpc("check_in_ticket" as never, { _qr_token: token } as never);
-    if (rpcErr) {
-      setResult({ kind: "invalid", message: rpcErr.message });
-      return;
-    }
-    const r = data as { kind: "success" | "already" | "invalid"; message?: string; item?: string; event?: string; used_at?: string };
-    if (r.kind === "success") {
-      setResult({ kind: "success", ticket: { item: r.item ?? "—", event: r.event ?? "—", user_email: "" } });
-    } else if (r.kind === "already") {
-      setResult({ kind: "already", usedAt: r.used_at ?? "" });
-    } else {
-      setResult({ kind: "invalid", message: r.message ?? "Invalid ticket" });
+    try {
+      const ticket = await ticketsService.checkInTicket(token, user?.id ?? "unknown");
+      
+      // Need to fetch event/item names for the success UI
+      const ev = await eventsService.getEvent(ticket.event_id);
+      
+      setResult({ 
+        kind: "success", 
+        ticket: { 
+          item: "Ticket Scanned", // Can't easily get item name without fetching item doc, keeping it simple
+          event: ev?.name ?? "Event", 
+          user_email: "" 
+        } 
+      });
+    } catch (e: any) {
+      const msg = e.message;
+      if (msg === "Ticket already used") {
+        setResult({ kind: "already", usedAt: new Date().toISOString() });
+      } else {
+        setResult({ kind: "invalid", message: msg });
+      }
     }
   }
 

@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { eventsService } from "@/services/firestore/events";
+import { useAuth } from "@/context/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Calendar, MapPin, CheckCircle2, Clock, Sparkles } from "lucide-react";
 import { eventColors } from "@/lib/event-color";
@@ -34,13 +36,35 @@ function TicketsPage() {
     queryKey: ["tickets", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("tickets")
-        .select("id, qr_token, status, price_cents, issued_at, used_at, items(name, starts_at, venue, events(id, name, event_date))")
-        .eq("user_id", user!.id)
-        .order("issued_at", { ascending: false });
-      if (error) throw error;
-      return data as unknown as TicketRow[];
+      const q = query(collection(db, "tickets"), where("user_id", "==", user!.id));
+      const snap = await getDocs(q);
+      const tickets = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+
+      // Fetch related items and events (n+1 problem, but fine for small scale)
+      const populated = await Promise.all(tickets.map(async (t) => {
+        const itemSnap = await getDoc(doc(db, `events/${t.event_id}/items/${t.item_id}`));
+        const itemData = itemSnap.exists() ? itemSnap.data() : null;
+        
+        const eventSnap = await getDoc(doc(db, "events", t.event_id));
+        const eventData = eventSnap.exists() ? { id: eventSnap.id, ...eventSnap.data() } : null;
+
+        return {
+          ...t,
+          items: itemData ? {
+            name: itemData.name,
+            starts_at: itemData.starts_at ?? null,
+            venue: itemData.venue ?? null,
+            events: eventData ? {
+              id: eventData.id,
+              name: (eventData as any).name,
+              event_date: (eventData as any).event_date
+            } : null
+          } : null
+        };
+      }));
+
+      // Sort by created_at desc
+      return populated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) as unknown as TicketRow[];
     },
   });
 

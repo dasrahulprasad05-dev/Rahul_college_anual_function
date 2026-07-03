@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/lib/firebase";
+import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,19 +20,24 @@ function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+  const [oobCode, setOobCode] = useState<string | null>(null);
 
   useEffect(() => {
-    // Supabase parses recovery tokens from the URL hash automatically.
-    // Wait for a session to be established before allowing password update.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-        setReady(true);
-      }
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-    return () => subscription.unsubscribe();
+    // Firebase includes oobCode in the query string
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("oobCode");
+    if (code) {
+      verifyPasswordResetCode(auth, code)
+        .then(() => {
+          setOobCode(code);
+          setReady(true);
+        })
+        .catch(() => {
+          toast.error("Invalid or expired reset link.");
+        });
+    } else {
+      toast.error("Missing reset code.");
+    }
   }, []);
 
   async function submit(e: React.FormEvent) {
@@ -40,12 +46,12 @@ function ResetPasswordPage() {
       toast.error("Passwords don't match");
       return;
     }
+    if (!oobCode) return;
     setBusy(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
+      await confirmPasswordReset(auth, oobCode, password);
       toast.success("Password updated!");
-      navigate({ to: "/tickets" });
+      navigate({ to: "/auth" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update password");
     } finally {
