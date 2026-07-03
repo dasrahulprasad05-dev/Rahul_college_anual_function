@@ -5,9 +5,44 @@ import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { Sparkles, Eye, EyeOff, ShieldCheck, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+
+const rules = [
+  { id: "length", label: "At least 6 characters", test: (p: string) => p.length >= 6 },
+  { id: "upper", label: "One uppercase letter (A-Z)", test: (p: string) => /[A-Z]/.test(p) },
+  { id: "special", label: "One special character (!@#$...)", test: (p: string) => /[^a-zA-Z0-9]/.test(p) },
+];
+
+function PasswordStrengthMeter({ password }: { password: string }) {
+  if (!password) return null;
+  const passed = rules.filter((r) => r.test(password)).length;
+  const strength = passed === 0 ? 0 : passed === 1 ? 33 : passed === 2 ? 66 : 100;
+  const color = strength <= 33 ? "#ef4444" : strength <= 66 ? "#f59e0b" : "#22c55e";
+  const label = strength <= 33 ? "Weak" : strength <= 66 ? "Medium" : "Strong";
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${strength}%`, backgroundColor: color }} />
+        </div>
+        <span className="text-xs font-medium" style={{ color }}>{label}</span>
+      </div>
+      <div className="space-y-1">
+        {rules.map((rule) => {
+          const ok = rule.test(password);
+          return (
+            <div key={rule.id} className="flex items-center gap-2">
+              {ok ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" /> : <XCircle className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
+              <span className={`text-xs ${ok ? "text-green-500" : "text-muted-foreground"}`}>{rule.label}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/reset-password")({
   ssr: false,
@@ -25,6 +60,9 @@ function ResetPasswordPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [oobCode, setOobCode] = useState<string | null>(null);
+
+  const isPasswordStrong = rules.every((r) => r.test(password));
+  const passwordsMatch = confirm.length > 0 && password === confirm;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -67,8 +105,6 @@ function ResetPasswordPage() {
     }
   }
 
-  const passwordsMatch = confirm.length > 0 && password === confirm;
-  const passwordTooShort = password.length > 0 && password.length < 6;
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
@@ -154,7 +190,7 @@ function ResetPasswordPage() {
                         required
                         minLength={6}
                         placeholder="At least 6 characters"
-                        className={`pr-10 ${passwordTooShort ? "border-red-500/50 focus-visible:ring-red-500/30" : ""}`}
+                        className="pr-10"
                       />
                       <button
                         type="button"
@@ -165,9 +201,7 @@ function ResetPasswordPage() {
                         {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    {passwordTooShort && (
-                      <p className="text-xs text-red-500 mt-1">Must be at least 6 characters</p>
-                    )}
+                    <PasswordStrengthMeter password={password} />
                   </div>
 
                   {/* Confirm Password */}
@@ -213,7 +247,7 @@ function ResetPasswordPage() {
 
                   <Button
                     type="submit"
-                    disabled={busy || !passwordsMatch || passwordTooShort}
+                    disabled={busy || !passwordsMatch || !isPasswordStrong}
                     className="w-full gradient-gold text-primary-foreground hover:opacity-90 font-semibold h-11 mt-2"
                   >
                     {busy ? (
