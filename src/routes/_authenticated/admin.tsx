@@ -54,6 +54,7 @@ function AdminPage() {
   const { isAdmin, loading, user } = useAuth();
   const qc = useQueryClient();
   const [activeTab, setActiveTab] = useState<"dashboard" | "team" | "gate">("dashboard");
+  const [seeding, setSeeding] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],
@@ -248,8 +249,30 @@ VALUES ('${user?.id ?? "YOUR_USER_ID"}', 'admin');`}</pre>
                     <p className="text-muted-foreground mt-1 text-sm">Manage events, check statistics, and view items.</p>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => seedDatabase()} className="bg-white/5">
-                      Seed Demo Data
+                    <Button
+                      variant="outline"
+                      disabled={seeding}
+                      onClick={async () => {
+                        setSeeding(true);
+                        await seedDatabase();
+                        setSeeding(false);
+                        qc.invalidateQueries({ queryKey: ["admin-events"] });
+                        qc.invalidateQueries({ queryKey: ["admin-stats"] });
+                        qc.invalidateQueries({ queryKey: ["events"] });
+                      }}
+                      className="bg-white/5"
+                    >
+                      {seeding ? (
+                        <span className="flex items-center gap-2">
+                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Loading events…
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" />
+                          Load 20 Sample Events
+                        </span>
+                      )}
                     </Button>
                     <EventSheet
                       mode="create"
