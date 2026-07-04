@@ -7,6 +7,62 @@ import { Calendar, MapPin, Ticket, ScanLine, Sparkles, ArrowRight, Zap } from "l
 import { Button } from "@/components/ui/button";
 import { eventColors } from "@/lib/event-color";
 import { HoverColorCard } from "@/components/ui/hover-color-card";
+import { useState, useEffect } from "react";
+
+const CursorSpotlight = () => {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const isDesktop = window.matchMedia("(pointer: fine)").matches;
+    if (!isDesktop) return;
+
+    const updateMousePosition = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => setIsVisible(false);
+
+    window.addEventListener("mousemove", updateMousePosition);
+    document.body.addEventListener("mouseenter", handleMouseEnter);
+    document.body.addEventListener("mouseleave", handleMouseLeave);
+    setIsVisible(true);
+
+    return () => {
+      window.removeEventListener("mousemove", updateMousePosition);
+      document.body.removeEventListener("mouseenter", handleMouseEnter);
+      document.body.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
+  if (!isVisible) return null;
+
+  return (
+    <motion.div
+      className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      animate={{ opacity: isVisible ? 1 : 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        className="absolute w-[600px] h-[600px] rounded-full blur-[100px] opacity-20 mix-blend-screen"
+        style={{
+          background: "radial-gradient(circle, var(--neon-pink) 0%, transparent 60%)",
+        }}
+        animate={{
+          x: mousePosition.x - 300,
+          y: mousePosition.y - 300,
+        }}
+        transition={{
+          type: "spring",
+          damping: 50,
+          stiffness: 400,
+          mass: 0.5,
+        }}
+      />
+    </motion.div>
+  );
+};
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,6 +92,8 @@ function Index() {
   return (
     <div className="min-h-screen overflow-x-hidden">
       <Navbar />
+
+      <CursorSpotlight />
 
       {/* HERO */}
       <section className="relative">

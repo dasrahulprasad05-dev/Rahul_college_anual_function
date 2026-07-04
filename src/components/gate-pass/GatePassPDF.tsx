@@ -6,14 +6,14 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
-    backgroundColor: '#0B0B12',
+    backgroundColor: '#ffffff',
     padding: 30,
-    color: '#ffffff',
+    color: '#000000',
     fontFamily: 'Helvetica',
   },
   card: {
-    border: '2pt solid #FF3D8A',
-    borderRadius: 20,
+    border: '2pt solid #000000',
+    borderRadius: 12,
     padding: 30,
     height: '100%',
     display: 'flex',
@@ -23,14 +23,14 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#F5B301',
+    color: '#000000',
     textAlign: 'center',
     marginBottom: 10,
     textTransform: 'uppercase',
   },
   subHeader: {
     fontSize: 14,
-    color: '#9A9AAE',
+    color: '#333333',
     textAlign: 'center',
     marginBottom: 40,
     letterSpacing: 2,
@@ -43,8 +43,8 @@ const styles = StyleSheet.create({
   photo: {
     width: 200,
     height: 200,
-    borderRadius: 100,
-    border: '4pt solid #FF3D8A',
+    borderRadius: 10,
+    border: '4pt solid #000000',
     objectFit: 'cover',
   },
   details: {
@@ -56,14 +56,14 @@ const styles = StyleSheet.create({
   },
   passId: {
     fontSize: 12,
-    color: '#9A9AAE',
+    color: '#333333',
     fontFamily: 'Courier',
   },
   footer: {
     marginTop: 'auto',
     textAlign: 'center',
     fontSize: 12,
-    color: '#9A9AAE',
+    color: '#333333',
   }
 });
 
